@@ -1,0 +1,229 @@
+Selenium Grid2
+WebDriver,Selenium IDE,Selenium Grid
+利用Selenium Grid可以在不同的主机上建立主节点(hub)和分支节点(node),可以使主节点上的测试用例在不同的分支节点上运行.对不同的节点来说,可以搭建不同的测试环境(操作系统,浏览器),从而使一份测试用例得到不同环境下的执行结果
+Selenium Grid2
+9.1 Selenium Server环境配置
+1)下载地址:书签中
+2)配置java环境,由java开发
+JDK:Java Development Kit,面向开发人员使用的SDK,提供了Java的开发环境和运行环境
+JRE:Java Runtime Environment,Java的运行环境,面向的是Java程序的使用者,而不是开发者
+3)运行Selenium Server
+java -jar selenium......jar
+9.2Selenium Grid工作原理
+Grid是用于设计帮助我们进行分布式测试的工具,其整个结构由一个hub主节点和若干个node代理节点组成.hub用来管理各个代理节点的注册和状态信息,并且接收远程客户端代码的请求调用,然后把请求的命令再转发给代理节点来执行.使用Grid远程执行测试的代码与直接调用Selenium Server是一样的,只是环境启动的方式不一样,需要同时启动一个hub和至少一个node
+    java -jar selenium-server-standalone-x.xx.x.jar - role hub
+    java -jar selenium-server-standalone-x.xx.x.jar - role node
+上面的代码分别启动了一个hub和一个node,hub默认端口号为4444,node默认端口号为5555.若是同一台主机上要启动多个node,则需注意端口号,可以通过下面的方式来启动多个node节点
+    java -jar selenium....... -role node -port 5555
+    java -jar selenium....... -role node -port 5556
+    java -jar selenium...... -role node -port 5557
+调用Grid的基本结构如图所示
+当你的测试用例需要验证的环境比较多时,可以并行地执行这些用例进而缩短测试总耗时.并行地能力需要借助编程语言的多线程技术.Grid可以根据用例中指定的平台配置信息把用例转发给符合匹配要求的测试代理
+例如,你的用例中指定了要在Linux上用Firefox版本进行测试,那么Grid会自动匹配注册信息为Linux且安装了Firefox的代理节点,如果匹配成功,则转发测试请求,如果失败则拒绝请求
+通过浏览器访问Grid的控制台:http://127.0.0.1:4444/gird/console
+9.3Remote应用
+WebDriver支持多浏览器下的执行,这就是因为WebDriver针对每一种浏览器驱动都重写WebDriver方法,所以,在脚本运行之前要先确定浏览器驱动
+    driver = webdriver.Firefox()
+    driver = webdriver.Chrome()
+    driver = webdriver.Ie()
+9.3.1 WebDriver驱动分析
+selenium包的webdriver目录下除了Firefox,Chrome,IE等驱动外,还有remote包含了webdriver.py文件
+remote也可以看做一种驱动类型,而这种类型比较特别,不是支持某一款特定的浏览器或平台,而是一种配置模式,我们在这种配置模式下制定任意的平台或浏览器,这种模式的执行都需要Selenium Server的支持
+查看webdriver.py的实现
+在__init__.py中对不同驱动的路径做了简化,并且将不同目录下的WebDriver类重命名为相应的浏览器(Firefox, Chrome, IE等),所以,在调用不同的浏览器的驱动时就简化了层级
+查看selenium中remote的webdriver.py文件中的WebDriver类的__init__()初始化方法中的command_executor参数,默认指向本机(127.0.0.1)的4444端口号,通过修改这个参数可以指向任意的某台主机
+除此之外,我们还需要对浏览器进行配置.浏览器的配置由desired_capabilities参数决定,在webdriver/common目录下的desired_capabilities.py文件
+片段:
+class DesiredCapabilities(object):
+    """
+    Set of default supported desired capabilities.
+
+    Use this as a starting point for creating a desired capabilities object for
+    requesting remote webdrivers for connecting to selenium server or selenium grid.
+
+    Usage Example::
+
+        from selenium import webdriver
+
+        selenium_grid_url = "http://198.0.0.1:4444/wd/hub"
+
+        # Create a desired capabilities object as a starting point.
+        capabilities = DesiredCapabilities.FIREFOX.copy()
+        capabilities['platform'] = "WINDOWS"
+        capabilities['version'] = "10"
+
+        # Instantiate an instance of Remote WebDriver with the desired capabilities.
+        driver = webdriver.Remote(desired_capabilities=capabilities,
+                                  command_executor=selenium_grid_url)
+
+    Note: Always use '.copy()' on the DesiredCapabilities object to avoid the side
+    effects of altering the Global class instance.
+
+    """
+
+    FIREFOX = {
+        "browserName": "firefox",
+        "marionette": True,
+        "acceptInsecureCerts": True,
+    }
+
+    INTERNETEXPLORER = {
+        "browserName": "internet explorer",
+        "version": "",
+        "platform": "WINDOWS",
+    }
+....
+    'browserName':'chrome' 浏览器(chrome, Firefox)
+    'version':''            浏览器版本
+    'platform':'ANY'        测试平台(ANY表示默认平台)
+    'javascriptEnabled':True    JavaScript启动状态
+    "marionette":False          marionette是Python客户端允许你远程控制基于gecko的浏览器或设备运行一个marionette服务器,包括桌面Firefox和Firefox OS.该参数为Firefox特有
+9.3.2 Remote实例
+自动化测试脚本
+remote_ts.py
+from selenium.webdriver import Remote
+#调用Remote方法
+driver = Remote(command_executor='http://127.0.0.1:4444/wd/hub',
+                desired_capabilities={'platform': 'ANY',
+                                        'browserName': 'chrome',
+                                        'version': '',
+                                        'javascriptEnabled': True
+                
+                                        }
+                )
+driver.get('http://www.baidu.com')
+driver.find_element_by_id("kw").send_keys("remote")
+driver.find_element_by_id("su").click()
+driver.quit()
+从上面的Remote()方法配置来看,它相当于我们直接使用Webdriver.Chrome(),但是Remote()却大大增加了配置的灵活性
+9.3.3 参数化平台及浏览器
+通过selenium server可以轻松地创建本地节点和远程节点.而Remote的作用就是配置测试用例在这些节点上
+本机打开cmd命令提示符窗口,分别启动一个hub和两个node节点
+java -jar sel** -role hub
+java -jar sel** -role node -port 5555
+java -jar sel* -role node -port 5556
+下面修改脚本时其在不同的节点和浏览器上运行
+remote_ts.py
+from selenium.webdriver import Remote
+#定义主机与浏览器
+lists = {'http://127.0.0.1:4444/wd/hub': 'chrome',
+		'http://127.0.0.1:5555/wd/hub': 'firefox',
+		'http://127.0.0.1:5556/wd/hub': 'edge'}
+#通过不同的浏览器执行脚本
+for host, browser in lists.items():
+	print(host, browser)
+	driver = Remote(command_executor = host,
+					desired_capabilities={'platform': 'ANY',
+										  'browserName': browser,
+										  'version': '',
+										  'javascriptEnabled': True
+					})
+	driver.get("http://www.baidu.com")
+	driver.find_element_by_id("kw").send_keys(browser)
+	driver.find_element_by_id("su").click()
+	driver.close()
+首先,创建lists字典,定义不同的主机IP,端口号及浏览器.然后,通过for循环读取lists字典中的数据作为Remote()的配置信息,从而使脚本在不同的节点及浏览器下执行
+1.启动远程node
+我们目前启动的hub与node都是同一台主机上的,要想在其他主机上启动node,则必须满足一下条件.
+	1)本地hub主机与远程node主机之间可以用ping命令连通
+	2)远程主机必须安装用例执行的浏览器及驱动,并且驱动要放在环境变量path的目录下
+	3)远程主机必须安装java环境,因为需要运行Selenium Server
+2.操作步骤
+	1)启动本地hub主机(本地主机IP为:)
+	java -jar se*** -role hub
+	2)启动远程node主机(操作系统..,IP:..)
+	java -jar se*** -role node -port 5555 -hub http://ip:4444/grid/register
+	设置的端口号为:5555,指向的hub主机IP
+	3)修改远程主机的IP地址及端口号,在其上面的Firefox浏览器运行脚本
+	remote_ts.py
+	....
+	#定义主机与浏览器
+	lists = {'http://127.0.0.1:4444/wd/hub': 'chrome',
+			'http://127.0.0.1:5555/wd/hub': 'internet explorer',
+			'http://远程IP:5555/wd/hub': 'firefox'}
+	....
+现在再来运行脚本,会在远程ip主机上看到脚本执行
+小技巧:在启动Selenium Server时,每次都要输入一长串命令.可以将启动命令生成批处理文件.
+首先创建一个startup.bat文件,例如Selenium Server存放在D盘selenium目录下,那么可以在.bat文件中输入:
+	java -jar D:\\selenium\se** -role hub
+然后,在需要启动Selenium Server的时候双击startup.bat文件即可.另外,我们还可以通过VisGrid工具来启动和管理节点
+
+9.4WebDriver驱动
+WebDriver所支持的平台/浏览器/模式如下表
+平台/浏览器/模式	驱动						说明
+Android									支持脚本在Android WebView应用的擦拭,一般指移动端浏览器
+BlackBerry								支持脚本在黑莓浏览器上运行
+Firefox			geckodriver.exe
+Chrome			chromediver.exe			WebDriver原本为谷歌的项目,之后与Selenium项目合并,支持很好
+IE				IEDriverServer.exe		需要下载驱动支持,用于驱动脚本在IE系列的浏览器下运行
+Edge			MicrosoftWebDriver.exe	支持脚本在win10中的Edge浏览器下执行
+Opera			operadriver.exe			OperaChromiumDriver基于ChromeDriver
+Safari			包含在Selenium Server中	目前也提供Windows版本
+HtmlUnit		包含在Selenium Server中	HtmlUnit将请求返回文档模拟成HTML,从而模拟浏览器运行,但又非真正地启动一款浏览器执行脚本
+PhantomJS		phantomjs.exe			PhantomJS是一个拥有JavaScript API的无界面WebKit,和HtmlUnit类似,可以看作是一款无界面浏览器
+
+1.支持平台
+WebDriver支持Android和BlackBerry两个移动平台的浏览器测试
+Android推荐appium,拓展了webdriver的协议,支持iOS平台和Android平台上的原生应用,web应用和混合应用
+2.支持浏览器
+Firefox,Chrome,IE,Edge,Opera,Safari
+主要与浏览器内核有关
+3.支持模式
+HtmlUnit和PhantomJS是两个比较特殊的模式,我们可以把他们看作是伪浏览器,在这种模式下支持html,JavaScript等的解析,但不会真正的渲染出页面.由于不进行CSS及GUI渲染,所以运行效率上要比真实的浏览器要快很多,注意用于功能性测试上面
+关于浏览器内核:浏览器最重要或者说核心的部分是"Rendering Engine",可大概翻译为"渲染引擎",一般称为浏览器内核,负责对网页语法的解释(如标准通用标记语言下的一个应用HTML,JavaScript)并渲染(显示)网页,所以,所谓浏览器内核,通常也就是浏览器所采用的渲染引擎,渲染引擎决定了浏览器如何显示网页的内容以及页面的格式信息
+Trident(IE内核),Gecko(Firefox内核),Presto(Opera前内核)(已废弃),Webkit(Safari内核,Chrome内核原型,开源),Blink是一个由Google和OperaSoftware开发的浏览器排版引擎,该渲染引擎是开源引擎Webkit中WebCore组件的一个分支
+9.4.1Edge浏览器:报错信息中可能会有有用信息,如驱动的下载地址等
+9.4.2Opera浏览器:
+9.4.3Safari浏览器:
+驱动被集成到了Selenium Server中,所以需要通过Remote配置运行
+	java -jar se** 
+运行脚本
+from selenium.webdriver import Remote
+dc = {'browserName': 'safari'}
+driver = Remote(command_executor='http://127.0.0.1:4444/wd/hub',
+				desired_capabilities=dc)
+driver.get("http://www.baidu.com")
+driver.find_element_by_id("kw".send_keys("safari")
+driver.find_element_by_id("su").click()
+dirver.quit()
+9.4.4 HtmlUnit模式
+HtmlUnit官方网站:http://htmlunit.sourceforge.net/
+HtmlUnit是一款开源的Java页面分析工具,读取页面后,可以有效地使用HtmlUnit分析页面上的内容.项目可以模拟浏览器运行,被誉为Java浏览器的开源实现.这个没有界面的浏览器,其运行速度非常迅速.Selenium Server中同样包含了HtmlUnit驱动
+	java -jar sel*** 
+	然后运行脚本
+	from selenium.webdriver import Remote
+	from selenium.common.exceptions import WebDriverException
+	dc = {'browserName': 'htmlunit'}
+	driver = Remote(command_executor='http://127.0.0.1:4444:wd/hub',
+					desired_capabilities=dc)
+	driver.get("http://www.baidu.com")
+	driver.find_element_by_id("kw").send_keys("htmlunit")
+	driver.find_element_by_id("su").click()
+	driver.get_screenshot_as_file("D:\\run_ok.jpg")
+	driver.quit()
+这种模式下运行脚本并不会真正地打开浏览器,整个过程都是在后台执行的,所以,为了证明运行是成功的,或者证明脚本确实执行了,可以适当的步骤添加截图
+9.4.5 PhantomJS模式
+PhantomJS官方网站:http://phantomjs.org/
+PhantomJS是一个用于JavaScript API的无界面WebKit内核,与HtmlUnit类似.Webkit是Safari和其他浏览器使用的布局引擎,PhantomJS是一个浏览器,而且是一个无界面的浏览器.这意味着渲染后的网页实际上绝不会像是..可以把它作为一个可编程的浏览器终端
+在使用PhantomJS之前,需要先下载它.PhantomJS支持Windows,MAC,Linux等平台
+下载后解压得到phantomjs.exe程序,将其复制到环境变量路径中,即可通过PhantomJS模式运行测试脚本
+from selenium import webdriver
+from time import sleep
+
+driver = webdriver.PhantomJS()
+driver.get("http://www.baidu.com")
+try:
+	driver.find_element_by_id("kw").send_keys("phantomjs")
+	driver.find_element_by_id("su").click()
+	sleep(1)
+	driver.get_screenshot_as_file("D:\\baidu_ok.jpg")
+except WebDriverException as msg:
+	print(msg)
+	driver.get_screenshot_as_file("D:\\baidu_error.jpg")
+finally:
+	driver.quit()
+通过HtmlUnit或PhantomJS进行的自动化测试运行不会真正打开一个浏览器,可以利用截图帮助定位
+本章小结
+	Selenium Grid的原理和使用,因为其被集成到了Selenium Server中,所以我们以Selenium Server作为载体进行使用.
+	Remote代码实现简单分析,以及如何进行平台及浏览器的参数化.
+	测试用例在不同浏览器及模式下的运行

@@ -1,0 +1,50 @@
+2环境搭建
+ubuntu下的环境搭建
+sudo apt-get install python3-setuptools
+sudo apt-get install python3-pip
+python3 -m pip install selenium
+2.3使用IDLE编写Python
+合适的IDE(Integrates Development Environment,集成开发环境)
+1.Tab键自动补全
+2.回退代码语句:Alt+P 相反Alt+N
+
+编写第一个自动化脚本
+baidu.py
+#coding = utf-8
+from selenium import webdriver
+
+driver = webdriver.Chrome()
+driver.get("http://www.baidu.com")
+
+driver.find_element_by_id("kw").send_keys("Selenium2")
+driver.find_element_by_id("su").click()
+driver.quit()
+
+1)#coding=utf-8
+为了防止乱码问题,以及方便地在程序中添加中文注释,把编码统一成UTF-8
+注意:等号两边不要留空格,否则将不起作用.除此之外,下面的写法也可以起到相同的作用
+2)# -*- coding:UTF-8 -*-
+在python2时代,一般需要在程序文件头部指定编码类型,不过到了python3,编码类型的指定就显得不那么重要了
+3)from selenium import webdriver
+导入Selenium的WebDriver包,只有导入WebDriver包,才能使用WebDriver API进行自动化脚本的开发.在python下面,通过from...import...或import...引入模块
+4)driver = webdriver.Firefox()
+把webdriver的Firefox对象赋值给变量driver.只有获得了浏览器对象后,才可以启动浏览器.打开网址,操作页面元素,Firefox浏览器驱动默认以及在Selenium Webdriver包里面,所以可以直接调用.IE或Chrome需要安装相应的驱动
+5)driver.get("http://www.baidu.com")
+获得浏览器对象后,通过get()方法,可以向浏览器发送网址(URL)
+6)driver.find_element_by_id("kw").send_keys("Selenium2")
+关于页面元素定位在后面会详细介绍,这里通过id=kw,定位到百度的输入框,并通过键盘输入方法send_keys()向百度输入框输入"Selenium2"搜索关键字
+7)driver.find_element_by_id("su").click()
+这一步通过id=su定位"百度一下"搜索按钮,并向搜索按钮发送单击事件click()
+8)driver.quit()
+退出并关闭浏览器及相关的驱动程序
+2.5安装浏览器驱动
+http://www.seleniumhq.org/download/
+Firefox()替换为Ie(), Chrome()
+2.6不同编程语言下使用Webdriver
+W3C(万维网联盟)对WebDriver对做定义和规范
+http://www.w3.org/TR/webdriver/
+Webdriver是一个远程控制界面,支持反省和用户代理的控制权.它提供了一个独立于系统平台和编程语言的线协议(Wire Protocol)作为一种远程进程程序指示Web浏览器的行为
+该WebDriver API通过通信协议和一组接口发现页面上的DOM元素中定义的操作,包括控制浏览器的行为
+可以这样理解,例如,国标标准定义好插板和插头的生产标准后,所有的电器厂商生成的插头和所有插板厂商生产的插板都按照这套标准来设计和生产,所以,我们拿到任何一个合格的插头和插板都可以匹配得上
+WebDriver可以理解为对操作浏览器和页面元素的一套"国标",不同的编程语言都可以按照这套标准实现自己语言的WebDriver库
+

@@ -1,0 +1,63 @@
+{
+  "id": "3185b94d-2120-4d98-acf3-362cbf1a038c",
+  "version": "2.0",
+  "name": "tang",
+  "url": "https://www.baidu.com",
+  "tests": [{
+    "id": "ca5ce792-75cf-4870-996c-8dee6dee5e5d",
+    "name": "baidu1",
+    "commands": [{
+      "id": "ecce645b-c3f9-4300-a311-c5a16086193f",
+      "comment": "",
+      "command": "open",
+      "target": "/",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "207a3a1b-f028-4af7-b723-f4fbe3229e6c",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "962x824",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "2bbd2b5a-63db-4323-90ad-cd3c5c162db2",
+      "comment": "",
+      "command": "type",
+      "target": "id=kw",
+      "targets": [
+        ["id=kw", "id"],
+        ["name=wd", "name"],
+        ["css=#kw", "css:finder"],
+        ["xpath=//input[@id='kw']", "xpath:attributes"],
+        ["xpath=//span[@id='s_kw_wrap']/input", "xpath:idRelative"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "哈哈"
+    }, {
+      "id": "d6979e6d-cb49-4db0-b5c7-f80c5511e5e9",
+      "comment": "",
+      "command": "sendKeys",
+      "target": "id=kw",
+      "targets": [
+        ["id=kw", "id"],
+        ["name=wd", "name"],
+        ["css=#kw", "css:finder"],
+        ["xpath=//input[@id='kw']", "xpath:attributes"],
+        ["xpath=//span[@id='s_kw_wrap']/input", "xpath:idRelative"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "${KEY_ENTER}"
+    }]
+  }],
+  "suites": [{
+    "id": "b2a0e094-a796-45f8-a72a-03287954d5c7",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["ca5ce792-75cf-4870-996c-8dee6dee5e5d"]
+  }],
+  "urls": ["https://www.baidu.com/"],
+  "plugins": []
+}

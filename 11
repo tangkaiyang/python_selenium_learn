@@ -1,0 +1,398 @@
+自动化测试项目实战
+11.1 自动化测试用例设计
+11.1.1手工测试用例与自动化测试用例
+手工测试用例时针对功能测试人员的,而自动化测试用例则是针对自动化测试框架或工具的;前者是功能测试用例人员通过手工方式进行用例解析,后者是应用脚本技术进行用例解析.两者各自最大的特点在于,前者具有较好的异常处理能力,能够基于测试用例,制造各种不同的逻辑判断,而且人工测试步步跟踪,能够细致地定位问题;而后者是完全按照测试用例的步骤进行测试,只能在已知的步骤与场景中发现问题,而且往往因为网络问题或功能的微小变化导致用例执行异常,自动化的执行也很难发现新的bug
+手工测试用例与自动化测试用例的对比如下:
+    1.手工测试用例特点
+        较好的异常处理能力,能通过人为的逻辑判断校验当前步骤的功能是否正确实现
+        人工执行用例具有一定的步骤跳跃性
+        人工测试步步跟踪,能够细致地定位问题
+        主要用来发现功能缺陷
+    2.自动化测试用例特点
+        执行对象是脚本,任何一个判断都需要编码定义
+        用例步骤之间关联性强
+        主要用来保证产品主体功能正确和完整,让测试人员从繁琐重复的工作中解脱出来
+        目前自动化测试阶段定位在冒烟测试和回归测试
+手工测试用例与自动化测试用例之间存在较大的差异,不能直接把手工测试用例"翻译"成自动化测试脚本
+自动化不能完全地代替手工测试,自动化测试的目的仅仅在于让测试人员从繁琐重复的测试过程中解脱出来,把更多的时间和精力放到更有价值的测试中,例如探索性测试.而自动化测试更多的是用来进行冒烟测试和回归测试
+    3.自动化测试用例选型注意事项
+    1)不是所有的手工用例都要转化为自动化测试用例
+    2)考虑到脚本开发的成本,不要选择流程太复杂的用例.如果有必要,可以考虑把流程分成多个用例来实现脚本
+    3)选择的用例最好可以构建成场景.例如,一个功能模块,分多个用例,多个用例使用同一个场景.这样的好处在于方便构建关键字测试模型
+    4)选择的用例可以带目的性.例如,这部分用例作冒烟测试,那部分用例作回归测试等,当然,会存在重叠的关系.如果当前用例不能满足需求,那么唯有修改用例来适应脚本和需求
+    5)选取的用例可以是你认为是重复执行,很繁琐的部分.例如,字段验证,提示信息验证这类,这部分是用于回归测试
+    6)选取的用例可以是主体流程,这部分适用于冒烟测试
+    7)自动化测试也可以用来做配置检查,数据库检查.这些可能超越了手工用例,但也算用例拓展的一部分,项目负责人也可以有选择增加
+    8)构造复杂数据或重复简单的机械式动作,适用自动化脚本
+11.1.2 测试类型
+1.测试静态内容
+静态内容测试是最简单的测试,用于验证静态的,不变化的UI元素的存在性.
+    每个页面都有其预期的页面标题吗?这可以用来验证链接指向一个预期的页面
+    应用程序的主页包含一个应该在页面顶部的图片吗?
+    网站的每一个页面是否都包含一个页脚区域来显示公司的联系方式,隐私政策以及商标信息?
+    每一页的标题文本都使用的<h1>标签吗?每个页面都有正确的头部文本吗?
+你可能需要(也可能不需要)对页面内容进行自动化测试.如果你的网站内容是不易受到影响,则手工对内容进行测试就足够了.假设你的应用文件的位子被移动了,则内容测试就非常有价值
+2.测试链接
+Web站点的一个常见错误为失效的链接或链接指向无效页.链接测试涉及各个连接和验证预期的页面是否存在.如果静态链接不经常修改,则手动测试就足够了.但是,如果你的网页设计师经常改变连接,或者文件不时被重定向,则链接测试应该实现自动化
+3.功能测试
+在你的应用程序中,需要测试应用的特定功能,需要一些类型的用户输入,并返回某种类型的结果.通常一个功能测试将涉及多个页面,一个基于表单的输入页面,其中包含若干输入字段,提交和取消操作,以及一个或多个响应页面.用户输入可以通过文本输入域,复选框,下拉列表,或任何其他浏览器所支持的输入.
+功能测试通常时需要自动化测试最复杂的测试类型,但通常也是最重要的.典型的测试是登录,注册网站登录,用户账户曹组,账户设置变化,复杂的数据检索操作,等等.功能测试通常对应着你的应用程序的描述应用特性或设计的使用场景
+4.测试动态元素
+通常一个网页元素都有一个唯一的标识符,用于唯一地定位该网页中的元素.通常情况下,唯一标识符用HTML标记的"id"属性或"name"属性来实现
+这些标识符可以是一个静态的(即不变的)字符串常量,也可以是动态生成值,在每个页面实例上都是变化的.例如,有些Web服务器可能在一个页面实例上命名所显示的文件为doc3861,而在其他页面实例上显示为doc6148,这取决于用户在检索的"文档".验证文件是否存在的测试脚本可能无法找到不变的识别码来定位该文件.通常情况下,具有变化的标识符的动态元素存在于基于用户操作的结果页面上,然而,显然这取决于Web应用程序
+5.Ajax的测试
+Ajax是一种支持以及动态改变用户界面元素的技术.页面元素可以动态更改,但不需要浏览器重新载入页面,如动画,RSS源,其他实时数据更新等.Ajax有无数更新网页上元素的方法.最简单的方式是在Ajax驱动的应用程序中,数据可以从应用服务器检索,然后显示在页面上,而不需要重新加载整个页面,只有一小部分的页面,或者只有元素本身被重新加载.
+11.1.3 自动化测试用例编写原则
+在编写自动化测试用例过程中应遵循以下原则
+    1)一个用例为一个完整的场景,从用户登录系统到最终退出并关闭浏览器
+    2)一个用例只验证一个功能点,不要试图在用户登录系统后把所有的功能都验证以便
+    3)尽可能少的编写逆向逻辑用例.一方面因为逆向逻辑的用例很多(例如:手机号输错有几十种情况):另一方面自动化脚本本身比较脆弱,复杂的逆向逻辑用例实现起来较为麻烦且容易出错
+    4)用例与用例之间尽量避免产生依赖
+    5)一条用例完成测试之后需要对测试场景进行还原,以免影响其他用例的执行
+11.2 BBS社区项目实战
+    以BBS社区为例,主要有登录,个人中心,发帖,查看帖子,搜索,签到等功能
+11.2.1 准备工作
+    1.项目开发时个循序渐进的过程
+    这个自动化项目,并非项目最初的形态,其间经历了多次代码迭代与结构的重构,并且仅仅只是符号当前的项目需求.
+    一个只有几条测试用例的项目和有一个几百条测试用例的项目结构肯定是不一样的.对于只有几条测试用例的项目,我不需要考虑太多结构方面的问题,甚至只用线性模型来编写用例,其维护成本也不会太高;但是,当用例达到几百条时就不得不考虑各种问题,例如,如何降低测试代码冗余,对代码进行抽象与分层,采用哪种设计模式,等等
+    自动化测试的开发,是个不断调整代码与结构的过程.类,方法和函数的命名也是需要考究的方面,
+    2.选择合适的IDE
+11.2.2 项目结构介绍
+    自动化项目结构如图
+                                           |-->data
+                                           |
+                        |-->子项目bbs(社区)-|-->report
+                        |                  |             |--> test case
+                        |                  |-->test_case-|--> models
+                        |                                |--> page obj
+                        |
+    自动化项目(mztestpro)|
+                        |
+                        |-->子项目service(服务)--->...
+    下面逐级介绍此目录与文件的作用
+    mztestpro/
+                bbs/
+                    data/
+                    report/
+                            image/
+                    rest_case/
+                        models/
+                            driver.py
+                            function.py
+                            myunit.py
+                        page_obj/
+                            *Page.py
+                        *_sta.py
+                driver/
+                package/
+                run_bbs_test.py
+                startup.bat
+                自动化测试项目说明文档.docx
+1.mztestpro测试项目
+bbs:用于存放测试相关的数据
+driver:用于存放浏览器驱动.如selenium-server-standalone-2.47.0.jar,chromedriver.exe,IEDriverServer.exe等.
+在执行测试前根据执行场景将浏览器驱动复制到系统环境变量path目录下
+package:用于存放自动化所用到的拓展包.例如,HTMLTestRunner.py属于一个单独的模块,并且对其做了修改,所以,在执行测试前需要将他赋值到Python的Lib目录下
+run_bbs_test_py:项目主程序.用来运行社区(BBS)自动化用例
+startup.bat:用于启动Selenium Server,默认启动driver目录下的selenium-server-standalone-2.47.0.jar
+自动化测试项目说明文档.docx:介绍当前项目的架构,配置和使用说明
+2.bbs目录
+data:该目录用来存放测试相关的数据
+report:用于存放HTML测试报告.其下面创建了image目录用于存放测试过程中的截图
+test_case:测试目录,用于存放测试用例及相关模块
+3.test_case目录
+models:该目录下存放了一些公共的配置函数及公共类
+page_obj:该目录用于存放测试用例的页面对象(Page Obj).根据自定义规则,以"*Page.py"命名的文件为封装的页面对象文件
+*_sta.py:测试用例文件.根据测试文件匹配规则,以*_sta.py命名的文件将被当做自动化用例执行
+11.2.3 编写公共模块
+首先定义驱动文件;
+    ...\mztestpro\bbs\test_case\models\driver.py
+    driver.py
+    from selenium.webdriver import Remote
+    from selenium import webdriver
+
+    # 启动浏览器驱动
+    def browser():
+        # driver = webdriver.Chrome()
+        host = '127.0.0.1:4444' #运行主机: 端口号(本机默认:127.0.0.1:4444)
+        dc = {'browserName': 'chrome'} #指定浏览器('chrome','firefox',)
+        driver = Remote(command_executor = 'http://' + host + '/wd/hub',
+                        desired_capabilities = dc)
+        return driver 
+    if __name__ == '__main__':
+        dr = browser()
+        dr.get("http://www.baidu.com")
+        dr.quit()
+定义浏览器驱动函数browser(),该函数可以进行配置,根据我们的需求,配置测试用例在不同的主机及浏览器下运行.如果不知道如何配置请参考第10章
+自定义测试框架类:
+    ...\mztestpro\bbs\test_case\models\myunit.py
+    myunit.py
+    from selenium import webdriver
+    from .driver import browser
+    import unittest
+    import os
+
+
+    class MyTest(unittest.TestCase):
+
+        def setUp(self):
+            self.driver = browser()
+            self.driver.implicitly_wait(10)
+            self.driver.maxmize_window()
+
+        def tearDown(self):
+            self.driver.quit()
+定义MyTest()类用于继承unittest.TestCase类,因为笔者创建的所有测试类中setUp()与tearDown()方法所作的事情相同.所以,将他们抽象为MyTest()类,好处就是在编写测试用例时不考虑这两个方法的实现
+定义截图函数
+    ....\mztestpro\bbs\test_case\models\function.py
+    function.py
+    from selenium import webdriver
+    import os
+
+
+    #截图函数
+    def insert_img(driver, file_name):
+        base_dir = os.path.dirname(oa.path.dirname(__file__))
+        base_dir = str(base_dir)
+        base_dir = base_dir.replace('\\', '/')
+        base = base_dir.split('/test_case')[0]
+        file_path = base + "/report/image/" + file_name
+        driver.get_screenshot_as_file(file_path)
+    if __name__ == '__main__':
+        driver = webdriver.Chrome()
+        driver.get("https://www.baidu.com")
+        insert_img(driver, 'baidu.jpg')
+        driver.quit()
+创建截图函数insert_img(),为了保持自动化项目的移植性,采用相对路径的方式将测试截图保存到.\report\image\目录中
+11.2.4 编写Page Object
+使用Page Object设计模式来编写测试用例
+首先创建Page基础类
+    ...\mztestpro\bbs\test_case\page_obj\base.py
+    base.py
+    class Page(object):
+        '''
+        页面基础类,用于所有页面的继承
+        '''
+
+        bbs_url = 'http://bbs.meizu.cn'
+
+        def __init__(self, selenium_driver, base_url = bbs_url, parent = None):
+            self.base_url = base_url
+            self.driver = selenium_driver
+            self.timeout = 30
+            self.parent = parent
+
+        def _open(self, url):
+            url = self.base_url + url
+            self.driver.get(url)
+            assert self.on_page(), 'Did not land on %s' % url
+
+        def find_element(self, *loc):
+            return self.driver.find_element(*loc)
+
+        def find_elements(self, *loc):
+            return self.driver.find_elements(*loc)    
+        
+        def open(self):
+            self._open(self.url)
+
+        def on_page(self):
+            return self.driver.current_url == (self.base_url + self.url)
+
+        def script(self, src):
+            return self.driver.execute_script(src)
+创建页面基础类,通过__init__()方法初始化参数:浏览器驱动,URL地址,超时时长等.定义基本方法:open()用于打开BBS地址:find_element()和find_elements()分别用来定位单个与多个元素;创建script()方法可以更简便地调用JavaScript代码.当然我们还可以对更多的WebDriver方法进行重定义
+创建BBs登录对象类:
+    ...\mztestpro\bbs\test_case\page_obj\loginPage.py
+    loginPage.py
+    from selenium.webdriver.common.action_chains import ActionChains
+    from selenium.webdriver.common.by import By
+    from .base import Page
+    from time import sleep
+
+
+    class login(Page):
+        '''
+        用户登录页面
+        '''
+
+        url = '/'
+
+        #Action
+        bbs_login_user_loc = (By.XPATH, "//div[@id'mzCust']/div/img")
+        bbs_login_button_loc = (By.ID, "mzLogin")
+
+        def bbs_login(self):
+            self.find_element(*self.bbs_login_user_loc).click()
+            sleep(1)
+            self.find_element(*self.bbs_login_button_loc).click()
+
+        login_username_loc = (By.ID, 'account')
+        login_password_loc = (By.ID, "password")
+        login_button_loc = (By.ID, "login")
+
+        #登录用户名
+        def login_username(self, username):
+            self.find_element(*self.login_username_loc).send_keys(username)
+
+        #登录密码
+        def login_password(self, password):
+            self.find_element(*self.login_password_loc).send_keys(password)
+
+        #登录按钮
+        def login_button(self):
+            self.find_element(*self.login_button_loc).click()
+
+        #定义统一登录入口
+        def user_login(self, username = "username", password = "1111")
+            """获取的用户名密码登录"""
+            self.open()
+            self.bbs_login()
+            self.login_username(username)
+            self.login_password(password)
+            self.login_button()
+            sleep(1)
+        user_error_hint_loc = (By.XPATH, "//span[@for='account']")
+        pawd_error_hint_loc = (By.XPATH, "//span[@for='password']")
+        user_login_success_loc = (By.ID, "mzCustName")
+
+        #用户名错误提示
+        def user_error_hint(self):
+            return self.find_element(*self.user_error_hint_loc).text
+
+        #密码错误提示
+        def pawd_error_hint(self):
+            return self.find_element(*self.pawd_error_hint_loc).text
+
+        #登录成功用户名
+        def user_login_success(self):
+            return self.find_element(*self.user_login_success_loc).text
+创建登录页面对象,对用户登录页面上的用户名/密码输入框,登录按钮和提示信息等元素的定位进行封装.除此之外,还创建了user_login()方法作为系统统一登录的入口.关于对操作步骤的封装既可以放在Page Object当中,也可以放在测试用例当中,这个组要根据具体需求来衡量.这里之所以存放在Page Object当中,注意考虑到还有其他用例会调用到该登录方法.为username和password入参设置了默认值是为了方便其他用例在调用user_login()时不用再传递登录用户信息,因为该系统大多用例的执行使用该账号登录即可,同时也方便了在账号失效时的修改
+11.2.5 编写测试用例
+现在开始编写测试用例程序,因为前面以及做好了基础工作,此时测试用例的编写将会简便很多,更能几种精力考虑用例的设计与实现.
+创建BBS登录类:
+    ...\mztestpro\bbs\test_case\login_sta.py
+    此处需要注意文件名的创建.例如,假设登录页的对象命名为loginPage.py,那么关于测试登录的用例文件应该命名为login_sta.py,这样方便后期用例报错时问题的追踪.尽量把一个页面上的元素定位封装到一个"*Page.py"文件中,把针对这个页面的测试用例几种到一个"*_sta.py"文件中
+    login_sta.py
+    from time import sleep
+    import unittest, random, sys
+    sys.path.append("./models")
+    sys.path.append("./page_obj")
+    from models import myunit, function
+    from page_obj.loginPage import login
+
+
+    class loginTest(myunit.MyTest):
+        '''社区登录测试'''
+
+        #测试用户登录
+        def user_login_verify(self, username="", password=""):
+            login(self.driver).user_login(username, password)
+
+        def test_login1(self):
+            '''用户名,密码为空登录'''
+            self.user_login_verify()
+            po = login(self.driver)
+            self.assertEqual(po.user_error_hint(), "账号不能为空")
+            self.assertEqual(po.pawd_error_hint(), "密码不能为空")
+            function.insert_img(self.driver, "user_pawd_empty.jpg")
+
+        def test_login2(self):
+            '''用户名正确,密码为空登录'''
+            self.user_login_verify(username = 'pytest')
+            po = login(self.driver)
+            self.assertEqual(po.pawd_error_hint(), "密码不能为空")
+            function.insert_img(self.driver, "pawd_empty.jpg")
+
+        def test_login3(self):
+            '''用户名为空,密码正确'''
+            self.user_login_verify(password="abc12345")
+            po = login(self.driver)
+            self.assertEqual(po.user_error_hint(), "账号不能为空")
+            function.insert_img(self.driver, "user_empty.jpg")
+
+        def test_login4(self):
+            '''用户名与密码不匹配'''
+            character = random.choice('zyxwvutsrqponmlkjihgfedcba')
+            username = "zhangsan" + character
+            self.user_login_verify(username = username, password = "123456")
+            po = login(self.driver)
+            self.assertEqual(po.pawd_error_hint(), "密码与账号不匹配")
+            function.insert_img(self.driver, "user_pawd_error.jpg")
+
+        def test_login5(self):
+            '''用户名,密码正确'''
+            self.user_login_verify(username="zhangsan", password="123456")
+            sleep(2)
+            po = login(self.driver)
+            self.assertEqual(po.user_login_success(), '张三')
+            function.insert_img(self.driver, "user_pawd_true.jpg")
+        if __name__ == '__main__':
+            unittest.main()
+首先常见LoginTest()类,继承myunit.MyTest()类,关于MyTest()类的实现,请翻看前面的代码.这样就省去了在每个测试类中实现一遍setUp()和tearDown()方法
+创建user_login_verify()方法,并调用loginPage.py中定义的user_login()方法.为什么不直接调用呢?因为user_login()的入参以及设置了默认值,原因前面已经解释,这里需要重新将其入参的默认值设置为空即可
+前三条测试用例很好理解,分别验证
+    用户名密码为空,点击登录
+    用户名正确,密码为空,点击登录
+    用户名为空,密码正确,点击登录
+第四条用例验证错误的用户名和密码登录.在当前系统中如果反复使用固定且错误的用户名和密码,系统会弹出验证码输入框.为了避免这种情况的发生,就需要用户名进行随机变化,此处的做法用固定的前缀"zhangsan",末尾字符从a~z中随机一个字符与前缀进行拼接
+第五条用例验证正确的用户名和密码登录,通过获取用户名作为断言信息
+在上面的测试用例中,每条测试用例结束都会调用function.py文件中的insert_img函数进行截图.当用例运行完成后,打开../report/image/目录将会看到用例执行的截图文件
+11.2.6 执行测试用例
+为了在测试用例运行过程中不影响做其他事,笔者选择调用远程主机或虚拟机来运行测试用例,那么这里就需要使用Selenium Grid(其包含在Selenium Server)来调用远程节点
+创建...\mztestpro\startup.bat文件,用于启动..\mztestpro\driver\目录下的Selenium Server
+    startup.bat
+    java -jar ./driver/selenium*** -role hub
+双击startup.bat文件,启动Selenium Server创建主hub节点.在远程主机或虚拟机中同样需要启动Selenium Server创建node节点,
+创建用例执行程序:....\mztestpro\run_bbs_test.py
+    run_bbs_test.py
+    from HTMLTestRunner import HTMLTestRunner
+    from email.mime.text import MIMEText
+    from email.header import Header
+    import smtplib
+    import unittest
+    import time
+    import os
+
+    #================定义发送邮件===================
+    def send_mail(file_new):
+        f = open(file_new, 'rb')
+        mail_body = f.read()
+        f.close()
+
+        msg = MIMEText(mail_body, 'html', 'utf-8')
+        msg['Subject'] = Header("自动化测试报告", 'utf-8')
+        msg['from'] = '发送邮箱'
+        msg['to'] = '收件邮箱'
+
+        smtp = smtplib.SMTP()
+        smtp.connect("smtp.126.com")
+        smtp.login("username@126.com", "receiver@126.com", msg.as_string())
+        smtp.quit()
+        print("email has send out!")
+
+    #===============查找测试报告目录,找到最新生成的测试报告文件==========
+    def new_report(testreport):
+        lists = os.listdir(testreport)
+        lists.sort(key=lambda fn: os.path.getmtime(testreport + "\\" + fn))
+        file_new = os.path.join(testreport, lists[-1])
+        print(file_new)
+        return file_new
+
+    if __name__ == '__main__':
+        now = time.strftime("%Y-%m-%d %H_%M_%S")
+        filename = './bbs/report/' + now + 'result.html'
+        fp = open(filename, 'wb')
+        runner = HTMLTestRunner(stream = fp, title = '魅族社区自动化测试报告', description='环境: windows7 浏览器: chrome')
+        discover = unittest.defaultTestLoader.discover('./bbs/test_case', pattern = '*_sta.py')
+        runner.run(discover)
+        fp.close() #关闭生成的报告
+        file_path = new_report('./bbs/report/') #查找新生成的报告
+        send_mail(file_path) #调用发邮件模块
+执行过程并没有任何改动,集成了HTMLTestRunner生成HTML测试报告,以及集成自动发邮件功能等.唯一需要注意的是,脚本中的路径建议使用相对路径,以便于项目被移动到任意目录下执行
+打开....\models\driver.py文件,修改脚本运行的节点及浏览器.
+通过运行run_bbs_test.py来执行测试项目了
+本章小结
+前面的只是自动化项目的开始,完成了基本的架构设计,后面的的部分工作就是编写各个页面的*Page.py以及测试用例*_sta.py.
+其中会遇到元素的定位问题,架构的扩展等
+

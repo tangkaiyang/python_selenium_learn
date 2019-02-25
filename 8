@@ -1,0 +1,442 @@
+自动化测试高级应用
+8.1 HTML测试报告
+	HTMLTestRunner时Python标准库unittest单元测试框架的一个扩展,它生成易于使用HTML测试报告.HTMLTestRunner是在BSD许可证下发布的
+	http://tungwaiyip.info/software/HTMLTestRunner.html
+	基于python2的需要修改部分代码
+8.1.2 生成HTML测试报告
+	以test_baidu.py为例,生成HTMLTestRunner测试报告
+	from selenium import webdriver
+	import unittest
+	from HTMLTestRunner import HTMLTestRunner
+
+	class Baidu(unittest.TestCase):
+		def setUp(self):
+			self.driver = webdriver.Firefox()
+			self.driver.implicitly_wait(10)
+			self.base_url = "http://www.baidu.com/"
+		def test_baidu_search(self):
+			driver = self.driver
+			driver.get(self.base_url)
+			driver.find_element_by_id("kw").send_keys("HTMLTestRunner")
+			driver.find_element_by_id("su").click()
+		def tearDown(self):
+			self.driver.quit()
+	if __name__ == '__main__':
+		testunit = unittest.TestSuite()
+		testunit.addTestBaidu("test_baidu_search"))
+		#定义报告存放路径
+		fp = open('./result.html', 'wb')
+		#定义测试报告
+		runner = HTMLTestRunner(stream = fp, title = '百度搜索测试报告', description = '用例执行情况: ')
+		runner.run(testunit) #运行测试用例
+		fp.close() #关闭文件
+	代码分析:
+	导入import HTMLTestRunner模块
+	open()以二进制方法打开当前目录下的result.html,没有则创建
+	调用HTMLTestRunner模块下的HTMLTestRunner类,stream指定测试报告文件,title用于定义测试报告的标题,description用于定义测试报告的副标题
+	最后,通过HTMLTestRunner的run()方法来运行测试套件中所组装的测试用例.最后close()关闭测试报告文件
+8.1.3 更易读懂的测试报告
+	运用python的注释:一种叫comment,另一种叫doc string,前者为普通的注释,后者用于函数,类和方法的描述
+	def add(a, b):
+		"add()函数需要两个入参,并返回两个参数相加的值"
+		return a + b
+	help(add) #输出包括""内容
+	在类或方法下,通过""" """或''' '''来添加doc string类型的注释,这类注释在平时调用时不显示,可以通过help()方法来查看类或方法的这种注释
+	HTMLTestRunner可以读取doc string类型的注释.所以,我们只需要给测试类或方法添加这种类型的注释即可
+	baidu.py
+	# ....
+	class Baidu(unittest.TestCase):
+		'''百度搜索测试'''
+	# ....
+		def test_baidu_search(self):
+			'''搜索关键字:HTMLTestRunner'''
+	# ....
+8.1.4 测试报告文件名
+	自动生成测试报告名,并加入当前时间
+	python的time模块
+	import time
+	time.time()# 获取当前时间戳
+	time.ctime()# 当前时间的字符串形式
+	time.localtime()# 当前时间的struct_time形式
+	time.strftime()# 用来获取当前时间,可以将时间格式化为字符串
+	python中时间日期格式化符号
+		指令		含义
+		%a		星期几的简写
+		%A		星期几的全程
+		%w		十进制表示的星期几(值从0到6,星期天为0)
+		%d		十进制表示的每月的第几天
+		%b		月份的简写
+		%B		月份的全程
+		%m		十进制表示的月份
+		%y		不带世纪的十进制年份(值从0到99)
+		%Y		带世纪部分的十进制年制
+		%H		24小时制的小时
+		%I		12小时制的小时
+		%p		本地的AM或PM的等价显示
+		%M		十进制表示的分钟数
+		%S		十进制的秒数
+		%f		十进制的微秒,零填充左边
+		%Z		当前时区的名称
+		%j		十进制表示的每年的第几天
+		%U		一年中的星期数(00~53),星期天为星期的开始
+		%W		一年中的星期数(00~53),星期一为星期的开始
+		%x		本地相应的日期表示
+		%X		本地相应的时间表示
+		%%		%号本身
+	修改测试用例
+	test_baidu.py
+	import time
+	#....
+	if __name__ == '__main__':
+		testunit = unittest.TestSuite()
+		testunit.addTest(Baidu("test_baidu_search"))
+		#按照一定格式获取当前时间
+		now = time.strftime("%Y-%m-%d %H_%M_%S")
+		#定义报告存放路径
+		filename = './' + now + 'result.html'
+		fp = open(filename, 'wb')
+		runner = HTMLTestRunner(stream = fp, title = '百度搜索测试报告', description='用例执行情况: ')
+		runner.run(testunit)
+		fp.close()
+8.1.5 项目集成测试报告
+	目前HTMLTestRunner只是针对当个测试文件生成测试报告,我们希望他集成到runrest.py文件中,使其作用于整个项目
+	runtest.py
+	import unittest, time
+	from HTMLTestRunner import HTMLTestRunner
+	#指定测试用例为当前文件夹下的test_case目录
+	test_dir = './test_case'
+	discover = unittest.defaultTestLoader.discover(test_dir, pattern = 'test_*.py')
+
+	if __name__ == '__main__':
+		now = time.strftime("%Y-%m-%d %H_%M_%S")
+		filename = test_dir + '/' + now + 'result.html'
+		fp = open(filename, 'wb')
+		runner = HTMLTestRunner(stream = fp, title = '测试报告', description='用例执行情况: ')
+		runner.run(discover)
+		fp.close()
+8.2 自动发邮件功能
+	自动化测试项目的重要需求之一
+	SMTP(Simple Mail Transfer Protocol)是简单邮件传输协议,它是一组用于由源地址到目的地址传送邮件的规则,由它来控制新建的中转方式
+	python的smtplib模块对SMTP协议进行了简单的封装
+	使用SMTP对象的sendmail方法发送邮件,通过help()查看SMTP所提供的方法
+	导入SMTP对象,通过help()查看对象的注释,从中找到sendmail()方法的说明
+	connect(host, port)方法参数如下
+		host:		指定连接的邮箱服务器
+		port:		指定连接服务器的端口号
+	login(user, password)方法参数说明如下
+		user		登录邮箱用户名
+		password	登录邮箱密码
+	sendmail(from_addr, to_addrs, msg,...)方法参数说明如下
+		from_addr:	邮件发送者地址
+		to_addrs	字符串列表,邮件发送地址
+		msg			发送信息
+	quit()方法:用于结束SMTP会话
+	发邮件的两种方式:
+		1)自己邮箱的Web页面,输入自己邮箱的用户名和密码登录,打开发邮件页面,填写对方的邮箱地址及邮件标题与正文,完成后单击发送
+		2)通过邮箱客户端,填写账号密码及邮箱服务器,一般的邮箱客户端会默认记下这些信息,这个过程只需要填写一次,后面发邮件的过程与方法一相同
+		发送邮件的诸多需求:邮件的正文格式,是否带图片,邮件是否需要添加附件(及多附件),邮件是否需要同时向多人发送
+8.2.1 发送HTML格式的邮件
+	send_mail.py
+		import smtplib
+		from email.mime.text import MIMEText
+		from email.header import Header
+		#发送邮箱服务器
+		smtpserver = 'smtp.sina.com'
+		#发送邮箱用户/密码
+		user = 'username@sina.com'
+		password = '123456'
+		#发送邮箱
+		sender = 'username@sina.com'
+		#接受邮箱
+		receiver = 'receive@126.com'
+		#发送邮件主题
+		subject = 'Python email test'
+		#编写HTML类型的邮件正文
+		msg = MIMEText('<html><h1>你好!<h1></html>', 'html', 'utf-8')
+		msg['Subject'] = Header(subject, 'utf-8')
+		#定义发送邮箱与接收邮箱参数,不定义会报错,这样发送的邮件会被qq邮箱放入垃圾箱
+		msg['from']=sender
+		msg['to']=receiver
+		#连接发送邮箱
+		smtp = smtplib.SMTP()
+		smtp.connect(smtpserver)
+		smtp.login(user, password)
+		smtp.sendmail(sender, receiver, msg.as_string())
+		smtp.quit()
+8.2.2 发送带附件的邮件
+	send_attach_mail.py
+	import smtplib
+	from email.mime.text import MIMEText
+	from email.mime.multipart import MIMEMultipart
+	#发送邮箱服务器
+	smtpserver = 'smtp.sina.com'
+	#发送邮箱
+	sender = 'username@sina.com'
+	#接收邮箱
+	receiver = 'receiver@126.com'
+	#发送邮箱用户/密码
+	user = 'username@sina.com'
+	password = '123456'
+	#邮件主题
+	subject = 'Python send email test'
+	#发送的附件
+	sendfile = open('D:\\PycharmProjects\\untitled\\log.txt', 'rb').read()
+
+	att = MIMEText(sendfile, 'base64', 'utf-8')
+	att["Content-Type"] = 'application/octet-stream'
+	att["Content-Disposition"] = "attachment; filename='log.txt'"
+
+	msgRoot = MIMEultipart('related')
+	msgRoor['Subject'] = subject
+	msgRoot['from'] = sender
+	msgRoot['to'] = receiver
+	msgRoot.attach(att)
+
+	smtp = smtplib.SMTP()
+	smtp.connect(smtpserver)
+	smtp.login(user, password)
+	smtp.sendmail(sender, receiver, msgRoot.as_string())
+	smtp.quit()
+8.2.3 查找最新的测试报告
+	找到最新生成的测试报告是实现发邮件功能的关键
+	find_file.py
+		import os
+		#定义文件目录
+		result_dir = 'D:\\testpro\\report'
+
+		lists = os.listdir(result_dir)
+		#重新按时间对目录下的文件进行排序
+		list.sort(key = lambda fn: os.path.getmtime(result_dir + "\\" + fn))
+		print(("最新的文件为: " + lists[-1]))
+		file = os.path.join(result_dir, lists[-1])
+		print(file)
+
+8.2.4 整合自动发邮件功能
+	runtest.py
+	from HTMLTestRunner import HTMLTestRunner
+	from email.mime.text import MIMEText
+	from email.header import Header
+	import smtplib
+	import unittest
+	import time
+	import os
+
+	# =========定义发送邮件============
+	def send_mail(file_new):
+		f = open(file_new, 'rb')
+		mail_body = f.read()
+		f.close()
+
+		msg = MIMEText(mail_body, 'html', 'utf-8')
+		msg['Subject'] = Header("自动化测试报告", 'utf-8')
+
+		smtp = smtplib.SMTP()
+		smtp.connect("smtp.126.com")
+		smtp.login("username@126.com", '123456')
+		smtp.sendmail("username@126.com", 'receiver@126.com', msg.as_string())
+		smtp.quit()
+		print("email has send out !")
+	# ========查找测试报告目录,找到最新生成的测试报告文件=======
+	def new_report(testreport):
+		lists = os.listdir(testreport)
+		list.sort(key = lambda fn : os.path.getmtime(testreport + '\\' + fn))
+		file_new = os.path.join(testreport, lists[-1])
+		print(file_new)
+		return file_new
+	if __name__ == '__main__':
+		test_dir = 'D:\\testpro\\test_case'
+		test_report = 'D:\\testpro\\report'
+
+		discover = unittest.deaultTestLoader.discover(test_dir, pattern = 'test_*.py')
+		now = time.strftime("%Y-%m-%d_%H_%M_%S")
+		filename = test_report + '\\' + now + 'result.html'
+		fp = open(filename, 'wb')
+		runner = HTMLTestRunner(stream = fp, title = '测试报告', description = '用例执行情况: )
+		runner.run(discover)
+		fp.close()
+		new_report = new_report(test_report)
+		send_mail(new_report) #发送测试报告
+	整个程序的执行过程可以分为三个步骤
+	1)通过unittest框架的discover()找到匹配测试用例,由HTMLTestRunner的run()方法执行测试用例并生成最新的测试报告
+	2)调用new_report()函数找到测试报告目录(report)下最新生成的测试报告,返回测试报告的路径
+	3)将得到的最新测试报告的完整路径传给send_mail()函数,实现发邮件功能
+8.3 Page Object 设计模式
+	Page Object是Selenium自动化测试姓名开发实践的最佳设计模式之一,它主要体现在对界面交互细节的封装,这样可以使测试案例更关注于业务而非界面细节,从而提高测试案例的可读性
+8.3.1 认识Page Object
+	减少代码的重复
+	提高测试用例的可读性
+	提高测试用例的可维护性,特别是针对UI频繁变化的项目
+	当为Web页面编写测试时,需要操作该Web页面上的元素.然而如果在测试代码中直接操作HTML元素,那么你的代码是极其脆弱的,因为UI经常变动,我们可以将一个page对象封装成一个HTML页面,然后通过提供的应用程序特定的API来操作页面元素,而不是在HTML中四处寻找
+		Page Object原理
+			这个API是关于应用的 -----------> selectAlbumWithTitle()
+										  getArtist()
+										  updateRating(5)
+
+								  Page Objects
+								Album Page   Album List Page
+			这个API是关于HTML的------------>findElementWithClass('album')
+										  findELementWithClass('title-field')
+										  getText()
+										  click()
+										  findElementsWithClass('title-field')
+										  setText(5)
+								  HTML Wrapper
+								 title:Whiteout				title: Ouro Negro
+								 artist: in the Country		artist: Moacir Santos
+								 rating:					rating:
+	 page对象的一个基本经验法则是:凡是人能做的事,page对象通过软件客户端都能够做到.因此,它也应当提供一个易于编程的接口并隐藏窗口中底层的部件.所以访问一个文本框应该通过一个访问方法(accessor method)来实现字符串的获取与返回,复选框应当使用布尔值,按钮应当被表示为行为导向的方法名.page对象应当将在GUI控件上所有查询和操作数据的行为封装为方法.一个好的经验法则是,即使改变具体的控件,page对象的接口也不应该发生变化
+	 尽管该术语是"页面"对象,但并不意味着需要针对每个页面建立一个这样的对象,例如,页面有重要意义的元素可以独立为一个page对象.经验法则的目的是通过给页面建模,使其对应用程序的使用在变得有意义
+8.2.3 Page Object实例
+    以登录126邮箱为例,通过Page Object设计模式来实现
+    po_model.py
+        from selenium import webdriver
+        from selenium.webdriver.common.by import By
+        from time import sleep
+
+        class Page(object):
+            '''
+            基础类,用于页面对象的继承
+            '''
+            login_url = 'http://www.126.com'
+            def __init__(self, selenium_driver, base_url = login_url):
+                self.base_url = base_url
+                self.driver = selenium_driver
+                self.timeout = 30
+            def on_page(self):
+                return self.driver.current_url == (self.base_url + self.url)
+            def _open(self, url):
+                url = self.base_url + url
+                self.driver.get(url)
+                assert self.on_page(), 'Did not land on %s' % url
+            def open(self):
+                self._open(self.url)
+            def find_element(self, *loc):
+                return self.driver.find_element(*loc)
+        class LoginPage(Page):
+            '''
+            126邮箱登录页面模型
+            '''
+            url = '/'
+            #定位器
+            username_loc = (By.ID, "idInput")
+            password_loc = (By.ID, "pwdInput")
+            submit_loc = (By.ID, "loginBtn")
+
+            #Action
+            def type_uesrname(self, username):
+                self.find_element(*self.username_loc).send_keys(username)
+            def type_password(self, password):
+                self.find_element(*self.password_loc).send_keys(password)
+            def submit(self):
+                self.find_element(*self.submit_loc).click()
+
+        def test_user_login(driver, username, password):
+            """
+            测试获取的用户名/密码是否可以登录
+            """
+            login_page = LoginPage(driver)
+            login_page.open()
+            login_page.type_username(username)
+            login_page.type_password(password)
+            login_page.submit()
+        def main():
+            try:
+                driver = webdriver.Firefox()
+                username = 'username'
+                password = '123456'
+                test_user_login(driver, username, password)
+                sleep(3)
+                text = driver.find_element_by_xpath("//span[@id='spnUid']").text
+                assert(text == 'username@126.com'), "用户名成不匹配登录失败!"
+            finally:
+                #关闭浏览器窗口
+                driver.close()
+        if __name__ == '__main__':
+            main()
+    Page Object设计模式的实现显然使结构变得复杂了很多,
+    1.创建page类
+    #....
+    class Page(object):
+        '''
+        基础类,用于所页面的继承
+        '''
+        login_url = 'http://www.126.com'
+        def __init__(self, selenium_driver, base_url = login_url):
+            self.base_url = base_url
+            self.driver = selenium_driver
+            self.timeput = 30
+        def on_page(self):
+            return self.driver.current_url == (self.base_url + self.url)
+        def _open(self, url):
+            url = self.base_url + url
+            self.driver.get(url)
+            assert self.on_page(), 'Did not land on %s' % url
+        def open(self):
+            self._open(self.url)
+        def find_element(self, *loc)
+            return self.driver.find_element(*loc)
+    #......
+    首先创建一个基础类Page, 在初始化方法__init__()中定义驱动(driver),基本的URL(base_url)和超时时间(timeout)等.
+    定义open()方法用于打开URL网站,但它本身并未做这件事情,而是交由_open()方法来实现.关于URL地址的断言部分,则交由on_page()方法来实现,而find_element()方法用于元素的定位
+    2.创建LoginPage类
+    Page类中定义的这些方法都是页面操作的基本方法.下面根据登录页的特点再创建LoginPage类并集成Page类,这也就是PageObject设计模式中最重要的对象层
+    #......
+    class LoginPage(Page):
+        '''
+        126邮箱登录页面模型
+        '''
+        url = '/'
+        #定位器
+        username_loc = (By.ID, "idInput")
+        password_loc = (By.ID, "pwdInput")
+        submit_loc = (By.ID, "loginBtn")
+        # Action
+        def type_username(self, username):
+            self.find_element(*self.username_loc),send_keys(username)
+        def type_password(self, password):
+            self.find_element(*self.password_loc).send_keys(password)
+        def submit(self):
+            self.find_element(*self.submit_loc).click()
+    #......
+    LoginPage类中主要对登录页面上的元素进行封装,使其成为更具体的操作方法.例如,用户名,密码和登录按钮都被封装成了方法
+    不定长参数:加了*号的参数会以元组的形式导入,存放所有未命名的变量参数,加了**的参数会以字典的形式导入,单独出现的星号*后的参数必须用关键字传入
+    3.创建test_user_login()函数
+    .....
+    def test_user_login(driver, username, password):
+        """
+        测试获取的用户名/密码是否可以登录
+        """
+        login_page = LoginPage(driver)
+        login_page.open()
+        login_page.type_username(username)
+        login_page.type_password(password)
+        login_page.submit()
+    ....
+    test_user_login()函数将单个的元素操作组成一个完整的动作,而这个动作包含了打开的浏览器,输入用户名/密码,点击登录等单步操作.在使用该函数时需要将driver,username,password等信息作为函数的入参,这样该函数具有很强的可重用性
+    4.创建main()函数
+    #....
+    def main():
+        try:
+            driver = webdriver.Firefox()
+            username = 'username'
+            password = '123456'
+            test_user_login(driver, username, password)
+            sleep(3)
+            text = driver.find_element_by_xpath("/span[@id='spnUid']").text
+            assert(text == 'username@126.com'), "用户名称不匹配,登录失败!"
+        finally:
+            #关闭浏览器窗口
+            driver.close()
+    if __name__ == "__main__":
+        main()
+    main()函数更接近与用户的操作行为.对用户来说,要进行邮箱的登录,需要关心的就是通过哪个浏览器打开邮箱网址,登录的用户名和密码是什么,置于输入框,按钮是如何定位的,则不需要关心
+    这样分层的好处是,不同的层关心不同的问题.页面对象层只关心元素的定位问题,测试用例只关心测试的数据
+    一个有分歧的地方是page对象是否应自身包含断言,或者仅仅提供数据给测试脚本来设置断言.在page对象中包含断言的倡导者认为,这有助于避免在测试脚本中出现重复的断言,可以更容易地提供更好的错误信息,并且提供更接近只做不同风格的API.不在page对象中包含断言的倡导者认为,包含断言会混合访问页面数据和实现断言逻辑的职责,并且导致page对象过于臃肿
+    笔者赞成在page对象中不包含断言,虽然我们可以通过为常用的断言提供断言库的方式来消除重复,提供更好的诊断,但从用户的角度去自动化的观点来看,判断是否登录成功是用户需要做的事情,不应该交由页面对象层来完成
+    使用Page Object模式之后的另一个好处就是有助于降低冗余.如果需要在10个用例中输入不同的用户名/密码登录,那么用main()方法写将会变得非常简洁
+    因此,Page Object模型的作用在一个测试人员自己写主场景测试案例时是不容易体会到的,因为你不需要和开发,业务交流案例,也不会写很多重复的动作.但是,当你真正开始尝试ATDD或BDD,当你开始写一些重复的异常分支流程时,当你开始为新需求频繁委会修改案例时,就会意识到Page Object的作用
+    最后,Page Object不是万灵药,也不是唯一方案,提高测试案例的可读性,避免案例步骤冗余才是终极目标
+本章小结
+    利用HTMLTestRunner生成测试报告,集成自动化发邮件功能和Page Object设计模式
+    它们之间没有直接的联系,但将他们合理地运行到自动化测试项目中将有助于自动化测试项目的开展
+    

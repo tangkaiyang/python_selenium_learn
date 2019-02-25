@@ -1,0 +1,289 @@
+自动化测试模型
+库:Library,库是由代码集合成的一个产品,供程序员调用.面向对象的代码组织形成的库叫类库,面向过程的代码组织形成的库叫函数库.WebDriver提供了一组操作Web页面的类和方法,可以成为Web自动化测试库
+框架:Framework.框架是为解决一个或一类问题而开发的产品,用户一般只需要使用框架提供的类或函数,即可实现全部功能.所以从这个角度来理解unittest框架,它主要用于实现测试用例的组织和执行,以及测试结果的生成.因为它的主要任务就是帮助我们完成测试热工作,所以我们通常把他叫做单元测试框架
+工具:Tools,工具与框架所作的事情类似,只是工具会有更高的抽象,屏蔽了底层的代码,一般会提供单独的操作界面供用户操作.例如:Selenium IDE和QTP即使自动化测试工具
+自动化测试模型,可以看做自动化测试框架与工具设计的思想
+几种模型:
+    线性测试
+    模块化驱动测试
+    数据驱动测试
+    关键字驱动测试
+5.1.1线性测试
+    通过录制或编写对应用程序的操作步骤产生相应的线性脚本,每个测试脚本相对独立,且不产生其他依赖于调用,这也是早期自动化测试的一种形式:他们其实就是单纯的用来模拟用户完整的操作场景
+    优势:每一个脚本都是完整且独立的
+    劣势:开发成本高,维护成本高
+5.1.2模块化驱动测试
+    重复的操作独立成公共模块,当用例执行过程中需要用到这一模块的操作时则被调用,这样就最大限度地消除了重复,从而提高测试用例的可维护性
+    提高了开发效率,简化了维护的复杂性
+5.1.3数据驱动测试
+    针对测试数据不同,登录步骤不同,用户名和密码却不同(测试数据)
+    数据驱动所需要的测试数据,也是通过工具内置的Datapool管理
+    数据驱动直白点就是数据的参数化,因为输入的数据不同从而引起输入结果的不同
+    无论读取的是定义的数组,字典或者是外部文件(excel,csv,txt,xml等),都可以看作是数据驱动,它的目的就是实现数据与脚本的分离
+    进一步增强了脚本的复用性
+5.1.4关键字驱动测试
+    通过关键字的改变引起测试结果的改变
+    典型关键字驱动工具以QTP(目前已更名UFT-Unified Functional Testing),Robot Framework(RIDE)工具为主.这类工具封装了底层代码,提供给用户独立的图形界面,以"填表格"的形式免除了测试人员对写代码的恐惧,从而降低了脚本编写的难度,我们只需要使用工具所提供的关键字以"过程式"的方式来编写用例即可
+    Selenium家族的Selenium IDE也可以看做是一种传统的关键字驱动的自动化工具
+5.2模块化驱动测试实例:
+	下面以126邮箱为例:
+	mail126.py
+	from selenium import webdriver
+
+	driver = webdriver.Firefox()
+	driver.implicitly_wait(10)
+	driver.get("http://www.126.com")
+	#登录
+	driver.find_element_by_id("idInput").clear()
+	driver.find_element_by_id("idInput").send_keys("username")
+	driver.find_element_by_id("pwdInput").clear()
+	driver.find_element_by_id("pwdInput").send_keys("password")
+	driver.find_element_by_id("loginBtn").click()
+	#收信,写信,删除信件等曹组
+	#....
+	#退出
+	driver.find_element_by_link_text("退出").click()
+	driver.quit()
+	先登录后才能进行具体操作
+	对登录和退出进行模块封装
+	mail126.py
+	#登录
+	def login():
+		driver.find_element_by_id("idInput").clear()
+		driver.find_element_by_id("idInput").send_keys("username")
+		driver.find_element_by_id("pwdInput").clear()
+		driver.find_element_by_id("pwdInput").send_keys("password")
+		driver.find_element_by_id("loginBtn").click()
+	#退出
+	def logout():
+		driver.find_element_by_link_text("退出").click()
+		driver.quit()
+	driver = webdriver.Firefox()
+	driver.implicitly_wait(10)
+	driver.get("http://www.126.com")
+	login() #调用登录模块
+	#收信,写信,删除信件等操作
+	#....
+	logout() #调用退出模块
+	只把操作步骤封装成函数并没有简便太多,我们需要将其放到单独的脚本文件中供其他用例使用
+	public.py
+	class Login():
+		#登录
+		def user_login(self, driver):
+			driver.find_element_by_id("idInput").clear()
+			driver.find_element_by_id("idInput").send_keys("username")
+			driver.find_element_by_id("pwdInput").clear()
+			driver.find_element_by_id("pwdInput").send_keys("password")
+			driver.find_element_by_id("loginBtn").click()
+		#退出
+		def user_logout(self, driver):
+			driver.find_element_by_link_text("退出").click()
+			driver.quit()
+		当函数被独立到单独的脚本文件中时做了一些调整,主要是为函数增加了浏览器驱动的入参.因为函数实现的操作需要通过浏览器驱动driver,driver需要通过具体调用的用例给定
+		mailTest.py
+		from selenium import webdriver
+		from public import Login
+
+		driver = webdriver.Firefox()
+		driver.implicitly_wait(10)
+		driver.get("http://www.126.com")
+		#调用登录模块
+		Login().user_login(driver)
+		#收信,写信,删除信件等操作
+		#...
+		#调用退出模块
+		Login().user_logout(driver)
+		首先,需要导入当前目录下public.py文件中的Login()类,在需要的位置调用类中的user_login()和user_logout()函数.这样对于每个用例的编写与维护就方便很多了
+5.3数据驱动测试实例
+	数据驱动的形式有很多,可以通过定义变量的形式进行参数化,也可以通过定义数组,字典的方式进行参数化,还可以通过读取文件(txt/csv/xml)的方式进行参数化
+5.3.1参数化邮箱登录
+	测试不同用户的登录.
+	不变的是登录的步骤,变化的是每次登录的用户名和密码,这种情况下就需要用到数据驱动方式来编写测试用例
+		public.py
+		....
+		#修改接口需要驱动,用户名和密码等参数
+		def user_login(self, driver, username, password):
+			driver.find_element_by_id("idInput").clear()
+			driver.find_element_by_id("idInput").send_keys(username)
+			driver.find_element_by_id("pwdInput").clear()
+			driver.find_element_by_id("pwdInput").send_keys(password)
+			driver.find_element_by_id("loginBtn").click()
+		....
+		修改user_login()方法的入参,为其增加username,password的入参,将得到的具体参数作为登录时的数据
+		mailTest.py
+		from selenium import webdriver
+		from public import Login
+		class LoginTest():
+			def __init__(self):
+				self.driver = webdriver.Firefox()
+				self.driver.implicitly_wait(10)
+				self.driver.get("http://www.126.com")
+			#admin用户登录
+			def test_admin_login(self):
+				username = 'admin'
+				password = '123'
+				Login().user_login(self.driver, username, password)
+				self.driver.quit()
+			#guest用户登录
+			def test_guest_login(self):
+				username = 'guest'
+				password = '321'
+				Login().user_login(self.driver, username, password)
+				self.driver.quit()
+		LoginTest().test_admin_login()
+		LoginTest().test_guest_login()
+		创建LoginTest类,并在__init__()方法中初始化浏览器驱动,等待超时长和URL等
+		这样test_admin_login()与test_guest_login()两个测试方法只需关注登录的用户名和密码,通过调用Login()类的user_login()方法并传入具体的参数来测试不同用户的登录
+5.3.2参数化搜索关键字
+	以数组的方式对搜索的关键字进行参数化
+	baidu.py
+	from selenium import webdriver
+	search_text = ['python', '中文', 'text']
+	fro text in search_text:
+		driver = webdriver.Firefox()
+		driver.implicitly_wait(10)
+		driver.get("http://www.baidu.com")
+		driver.find_element_by_id('kw').send_keys(text)
+		driver.find_element_by_id('su').click()
+		driver.quit()
+		创建数组search_text用来存放搜索的关键字,通过forU循环来遍历数组,最后把遍历的数组元素作为关键字
+		数据驱动的概念:因为测试数据的不同从而引起测试结果的不同
+5.3.3读取txt文件
+	读取txt文件的方式:
+		read():读取整个文件
+		readline():读取一行数据
+		readlines():读取所有行的数据
+	使用txt文件来存放用户名和密码数据,并通过读取该文件中的数据作为用例的测试数据
+	user_info.txt
+	zhangsan,123
+	lisi,456
+	wangwu,789
+	先将用户名和密码按行写入txt文件中,这里把用户名和密码用逗号,隔开
+	user_info.py
+	user_file = open('user_info.txt', 'r')
+	lines = user_file.readlines()
+	user_file.close()
+
+	for line in lines:
+		username = line.split(',')[0]
+		password = line.split(',')[1]
+		print(username, password)
+	split()拆分出来的部分以数组的形式存放
+5.3.4读取csv文件
+	假设现在每次要读取的是一组用户数据,包括用户名,邮箱,年龄,性别等信息,这是使用txt存放再读取就没那么方便了,对于这种类型可以通过CSV文件来存放
+	创建info.csv文件,首先通过WPS表格或Excel创建表格,再另存为CSV格式.注意不要通过直接修改文件后缀名的方式来创建,这样创建并非真正的CSV文件
+	下面编写csv_read.py文件进行循环读取
+	import csv #导入csv包
+	#读取本地CSV文件
+	data = csv.reader(open('info.csv', 'r'))
+	#循环输出每一行信息
+	for user in data:
+		print(user)
+	注意:这里输出所有的内容,并非只输出你认为的user字段
+	首先导入csv模块,通过reader()方法读取CSV文件;然后通过for循环遍历文件中的每一行数据.读取的每一行数据均是以数组的形式存储的.如果想取用户的某一列数据,只需指定数组下标即可
+	csv_read.py
+	import csv
+	data = csv.reader(open('info.csv', 'r'))
+	#取用户的邮箱地址
+	for user in data:
+		print(user[1])
+	数组下标从0开始
+	通过excel文件来存放这些数据也是不错的选择,所调用的模块从csv切换为xlrd,针对excel的文件操作也有所不同
+5.3.5读取xml文件
+	有时候我们需要读取的数据是不规则的.例如,我们需要一个配置文件来配置当前自动化测试脚本的URL,浏览器,登录的用户名和密码等,这时候就可以考虑选择使用XML文件来存放这些信息
+	info.xml
+	<?xml version="1.0" encoding="utf-8"?>
+	<info>
+		<base>
+			<platform>Windows</platform>
+			<browser>Firefox</browser>
+			<url>http://www.baidu.com</url>
+				<login username="admin" password="123456"/>
+				<login username="guest" password="654321"/>
+		</base>
+		<test>
+			<province>北京</province>
+			<province>广东</province>
+				<city>深圳</city>
+				<city>珠海</city>
+			<province>浙江</province>
+				<city>杭州</city>
+		</test>
+	</info>
+	1.获得标签信息
+	read_xml.py
+	from xml.dom import minidom
+	#打开xml文档
+	dom = minidom.parse('info.xml')
+	#得到文档元素对象
+	root = dom.documentElement
+	print(root.nodeName)
+	print(root.nodeValue)
+	print(root.nodeType)
+	print(root.ELEMENT_NODE)
+	首先导入xml的minidom模块,用来处理XML文件,parse()用于打开一个XML文件,documentElement用于得到XML文件位于的根元素
+	每一个节点都有它的nodeName,nodeValue,nodeType等属性.nodeName为节点名称,nodeValue为节点的值,值对文本节点有效;nodeType为节点的类型
+	2.获得任意标签名
+	from xml.dom import minidom
+	#打开xml文档
+	dom = minidom.parse('info.xml')
+	#得到文档元素对象
+	root = dom.documentElement
+
+	tagname = root.getElementsByTagName('browser')
+	print(tagname[0].tagName)
+	tagname = root.getElementsByTagName('login')
+	print(tagname[1].tagName)
+	tagname = root.getElementsByTagName('province')
+	print(tagname[2].tagName)
+	getElementsByTagName()可以通过标签名来获取标签,它所获得的的对象是以数组形式存放.假如"login"和"province"标签在info.xml文件中有多个,则可以通过指定数组的下标的方式来获取某一个具体标签
+	getElementsByTagName('province')获得的是标签名为"province"的一组标签
+	getElementsByTagName('province').tagname[0] 表示一组标签中的第一个
+
+3.获得标签的属性值
+	read_xml.py
+	from xml.dom import minidom
+	#打开xml文件
+	dom = minidom.parse('info.xml')
+	#得到文档元素对象
+	root = dom.documentElement
+
+	logins = root.getElementsByTagName('login')
+	#获得login的标签的username属性值
+	username = logins[0].getAttribute("username")
+	print(username)
+	#获得login标签的password属性值
+	password = logind[0].getAttribute("password")
+	print(password)
+	#获得第二个login标签的username属性值
+	username = logins[1].getAttribute("username")
+	print(username)
+	#获得第二个login标签的password属性值
+	password = logins[1].getAttribute("password")
+	print(password)
+	getAttribute()方法用于获取元素的属性值.它和WebDriver中所提供的get_attribute()方法类似
+4.获得标签对之间的数据
+	read_xml.py
+	from xml.dom import minidom
+	#打开xml文档
+	dom = minidom.parse('info.xml')
+	#获得文档元素对象
+	root = dom.documentElement
+
+	provinces = dom.getElementsByTagName("province")
+	citys = dom.getElementsByTagName('city')
+	#获得第二个province标签对的值
+	p2 = provinces[1].firstChild.data
+	print(p2)
+	#获得第一个city标签对的值
+	c1 = citys[0].firstChild.data
+	print(c1)
+	#获得第二个city标签对的值
+	c2 = citys[1].firstChild.data
+	print(c2)
+	firstChild属性返回被选节点的第一个子节点.data表示获取该节点的数据,它和WebDriver中提供的text方法类似
+本章小结
+	自动化测试模型的发展
+	实例介绍了模块化的应用
+	模块化和数据驱动在脚本开发过程中是必不可少的两个知识点,也是开发出可复用和可维护的脚本的基础
+	在数据驱动小节中,分别介绍了不同形式的数据驱动,读者可以根据实际需求选择合适的数据驱动形式

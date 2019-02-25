@@ -1,0 +1,77 @@
+GitHub托管项目
+GitHub为当前最流行的开源项目托管平台
+使用GitHub之前首先需要了解Git,Git是一个开源的分布式版本控制系统,用以高效地处理从很小到非常大的项目版本管理.Git是Linus Torvalds为了帮助管理Linux内核开发而开发的一个开放源码的版本控制软件.相比CVS, SVN等版本控制工具,Git无疑更加优秀,功能更加强大,在项目版本管理被越来越多的人使用
+使用Git来管理项目有两种方式,一种是本地部署Git版本管理系统,另一种是通过在线代码托管.本地部署Git版本管理系统,需要自己搭建环境,但项目的提交与更新速度快,更适合较为封闭的项目;使用在线托管最大的好处是在有网络的情况下可以随时随地地提交自己的代码,但项目是公开的,当然也可以创建私有项目,但需要支付一定的费用
+GitHub就是基于Git的在线代码托管平台
+13.1 注册与安装
+13.1.1 注册GitHub
+13.1.2 安装Git
+Git官方下载:http://git-scm.com/download/
+根据自己的平台选择下载
+Linux个版本下安装Git
+Debian/Ubuntu $ apt-get install git-core
+Fedora $ yum install git
+Gentoo $ emerge --ask --verbose dev--vcs/git
+Arch Linux $ pacman -S git
+下载并安装完成后,我们通常在Mac OSX及linux平台下用终端工具(Terminal)来使用Git,而在Windows平台下用Git Bash工具
+13.1.3建立连接
+本地Git与GitHub服务器之间保持通信时,使用SSH key认证方式来保证通信安全,所以在使用GitHub前读者必须先创建自己的SSH key
+Windows环境下
+打开Git Bash
+1)进入SSH 目录
+cd ~/.ssh
+
+2)生成新的SSH秘钥
+已经有的秘钥默认文件位置在C:/Users/fnngj/.ssh/id_rsa
+ssh-keygen -t rsa -C "github邮箱"
+三回车
+ls查看目录先生成的两个文件
+id_rsa是私钥,id_rsa.pub是公钥.千万不要把私钥文件id_rsa透露给任何人
+3)添加SSH公钥到GitHub
+赋值id_rsa.pub内的内容
+登录GitHub,单击头像->Settings->SSh Keys->Add SSH Keys
+title文本框任意字符
+key文本框中粘贴公钥字符串
+单击"Add key"
+4)测试连接
+ssh -T git@github.com
+
+13.2 Git/GitHub基本使用
+13.2.1 GitHub创建项目
+13.2.2 本地创建项目
+首先进行初始化设置:设置仓库人员的用户名和邮箱地址,这一步必不可少
+git config --global user.name "tangky"
+git config --global user.email "945541696@qq.com"
+在本地创建一个"project-name"项目,与GitHub上的项目名保持一致
+项目下创建test_case.py文件
+git init 用于对当前目录进行初始化,将当前的project-name目录交由Git进行管理
+git status 命名用来查看当前项目下所以文件的状态
+git add . 将文件交由git进行跟踪.后面.表示对当前项目下的所有文件进行跟踪
+git commit -m "first commit file" 将文件(由git跟踪的文件)提交到本地仓库. -m参数对本次的提交加以描述,通常提交的描述必不可少,方便追溯修改
+准备工作完成,下面将代码提交到GitHub
+HTTPS与SSh连接
+git remote add origin git@github.com:tangkaiyang/python3_practise.git 如果是第一次提交项目,通过这一行命令将本地的项目与远程的仓库建立连接.此处使用SSH方式连接
+git push -u origin master 将本地的项目提交到远程仓库的主分支
+13.2.3 克隆项目
+github除了提交项目外,还可以从上面克隆项目,也可以将使用过程中发现的bug,通过建立分支的方式提交给项目的原作者
+我们现在的场景是在家将项目提交到github上,到公司之后,需要将GitHub上的项目克隆到公司电脑,那么对应公司电脑来说,同样需要与GitHub建立连接
+    首先,下载安装Git
+    其次,通过Git生成本地公钥,并且将公钥添加到GitHub中
+    最后设置仓库人员的用户名和邮箱地址
+git clone git@github.com:tangkaiyang/python3_practise.git  
+git clone命令用于克隆GitHub上的项目到本地,通过"cd"命令进入项目目录,查看项目文件
+13.2.4 更新项目
+当在公司的电脑上对项目做了更新后(删除了原有文件,创建文件与文件夹),需要再次提交项目到GitHub
+git status
+通过git status命令查看当前变更.通过变更信息可以看出,删除了test_case.py文件.这个删除只是在项目目录下进行删除,Git对此文件留有记忆,所以要通过"git rm"命令将其删除
+与此同时又重新创建了一些测试目录与文件.提示通过"git add<file>.."命令交由Git跟踪管理
+git rm test_case.py 
+如果删除的是文件夹同样用次命令,例如:git rm test_case/
+如果删除的文件名中包含空格,则需要通过双引号将文件名引起来.例如:git rm "test case.py"
+git add .    对当前目录下的文件添加跟踪
+git status   将更新的文件提交到本地仓库
+git commit -m "updata project"    将本地项目提交到远程仓库GitHub
+git push origin master
+除了第一次下载项目需要通过git clone将项目克隆到本地外,后续则使用"git pull"命令将GitHub的更新拉取到本地
+git pull origin master
+例如,我们再次回到家后,将在公司的更新通过git pull拉取到本地.为了避免冲突,在每次push之前先把服务器上最新的代码pull到本地

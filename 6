@@ -1,0 +1,154 @@
+Selenium IDE
+基于Firefox浏览器的一个插件,Selenium IDE结合浏览器提供了脚本录制,回放以及脚本编辑功能
+可以使用Selenim IDE将录制的脚本生成相应的带单元测试框架的自动化脚本
+6.1 Selenium IDE安装
+6.1.1 在线安装
+    http://www.seleniumhq.org/download/
+6.4 Selenium IDE命令
+    常用命令
+    1.open:open(url)
+    在浏览器打开URL,可以接受相对路径和绝对路径两种形式
+    注意:该URL必须在与浏览器形同地安全限定范围内
+    Command         Target          Value
+    open            /mypage
+    open            http://localhost/
+    2.click:click(elementLocator)
+    -单击链接,按钮,复选和单选框
+    -如果单击后需要等待响应,则用"clickAndWait"
+    -如果是需要经过JavaScript得alert或confirm对话框后才能继续操作,则需要调用verify或assert来告诉Selenium进行什么操作
+    Command         Target          Value
+    click           aCheckbox
+    clickAndWait    submitButton
+    clickAndWait    anyLink
+    3.type:type(inputLocator, value)
+    -模拟键盘输入,向指定的input中输入值
+    -也适合给复选框和单选框赋值
+    -在这个例子中,只是给勾选了的复选框赋值,注意:只是赋值,而不是改写其文本
+    Command         Target          Value
+    type            nameField       John Smith
+    typeAndWait     textBoxThatSubmitsOnChange  newValue
+    4.select:select(dropDownLocator, optionSpecifier)
+    -根据optionSpecifier选项选择器来选择一个下拉菜单选项
+    -当多于一个选择器的时候,如在用通配符模式"f*b*",或者超过一个选型有相同的文本或值,则会选择第一个匹配到的值
+    Command         Target          Value
+    select          dropDown        Australian Dollars
+    select          dropDown        index=0
+    selectAndWait   currencySelector    value=AUD
+    selectAndWait   currencySelector    label = Aus*lian D*rs
+    5.goBack:goBack()
+    模拟单击浏览器的后退按钮
+    Command         Target          Value
+    goBack
+    6.selectWindow
+    select(windowId)
+    -选择一个弹出窗口
+    -当选中那个窗口时,所有的命令将会转移到被选择窗口中执行
+    Command         Target          Value
+    selectWindow    myPopupWindow
+    selectWindow    null
+    7.pause:pause(milliseconds)
+    -根据指定时间暂停Selenium脚本执行
+    -常在调试脚本或等待服务器响应时使用
+    Command         Target          Value
+    pause           5000
+    pause           2000
+    8.fireEvent:fireEvent(elementLocatore, evenName)
+    -模拟页面元素时间被激活的处理动作
+    Command         Target          Value
+    fireEvent       textField       focus
+    fireEvent       dropDown        blur
+    9.close
+    -模拟单击浏览器关闭按钮
+    Command         Target          Value
+    close
+6.5 断言与验证
+    测试用例需要做断言或验证,要有预期结果与实际结果进行比较的过程.自动化测试用例时,需要重视对实际结果的断言
+    4类命令:assert(断言),verify(验证),waitFor(等待),store(定义变量)
+    5种验证手段
+    Title:获取页面的标题
+    Value:获得元素的值
+    Text:获得元素的文本信息
+    Table:获得元素的标签
+    ElementPresent:获得当前元素
+6.5.1 断言
+    使用断言,测试用例将会在断言失败后停止运行
+    优点:直截了当地看到检查是否通过
+    缺点:若检查失败,后续的检查不会被执行,无法收集检查的结果状态
+    向脚本中添加断言命令,黑色的选型表示可选,灰色的选项表示当前不可选
+        Baidu Test Case
+        Command                 Target                  Value
+        open                    http://www.baidu.com/
+        type                    id=kw                   selenium ide
+        click                   id=su
+        assertTitle             selenium ide_百度搜索
+        assertText              css=img[alt="到百度首页"]
+        assertElementPresent    css=img[alt="到百度首页"]
+        close
+    以上的测试用例中添加了三种断言:Title,Text和ElementPresent,它们分别用来断言浏览器的标题,文本信息和当前元素
+6.5.2 验证
+    与断言相比,在执行验证命令失败后不会终止测试.如果你的测试只使用验证,可以得到的保证是:假设没有意外异常,则测试会被执行完毕,而不管是否发现缺陷.缺点:必须做更多的工作,以检查测试结果
+            Baidu Test Case
+            Command             Target                  Value
+            open                http://www.baidu.com/
+            type                id=kw                   selenium ide
+            click               id=su
+            verifyTitle         selenium ide_百度搜索
+            verifyText          css=img[alt="到百度首页"]
+            verifyElementPresent    css=img[alt="到百度首页"]
+            close
+    使用断言与验证:区别在于检查失败是想让测试终止还是简单记录检查失败后继续执行
+6.6 等待与变量
+6.6.1 等待
+    pause设置固定时间的休眠,而waitFor则用于在一定时间内等待某一元素显示
+        Baidu Test Case
+        Command             Target                      Value
+        open                http://www.baidu.com        
+        type                id=kw                       selenium ide
+        click               id=su       
+        waitForTitle        selenium ide_百度搜索
+        waitForText         css=img[alt="到百度首页"]
+        waitForElementPresent   css=img[alt="到百度首页"]
+        close
+    waitFor的Value如果为空,则默认时间为60秒.waitForTitle,waitForText,waitForElementPresent分别用来等待浏览器的标题,文本信息和当前元素
+6.6.2 变量
+    store用于定义变量
+        Baidu Test Case
+        Command             Target                      Value
+        open                http://www.baidu.com
+        type                id=kw                       selenium ide
+        click               id=su
+        storeTitle          selenium ide_百度搜索        title
+        storeText           css=img[alt="到百度首页"]    text
+        storeForElementPresent css=img[alt="到百度首页"] element
+        close
+    可以把页面中获取到的标题,文本信息和元素分别定义为title,text和element变量
+    下面通过定义的变量作为断言与验证的比较参数
+        Baidu Test Case
+        Command             Target                      Value
+        open                http://www.baidu.com
+        type                id=kw                       selenium ide
+        waitForValue        id=su
+        click               id=su                       百度一下
+        pause               2000
+        storeTitle          selenium ide_百度搜索        title
+        storeText           css=img[alt="到百度首页"]    text
+        storeForElementPresent css=img[alt="到百度首页"]  element
+        verifyTitle         selenium ide_百度搜索        title
+        verifyText          css=img[alt="到百度首页"]    text
+        assertElementPresent css=img[alt="到百度首页"]   element
+        close
+    store用于定义一个普通的变量
+    使用场景:
+    store(expression, variableName)
+    -expression:定义的变量值,该值可以由其他变量组合而成,或通过JavaScript表达式赋值给变量:variableName:定义的变量名
+        Command                 Target                                          Value
+        store                   Mr John Smith                                   fullname
+        store                   $.{title} $.{firstname} $.{suname}              fullname
+        store                   javascript.{Math.round(Math.PI*100)/100}        PI
+    例如:将百度搜索的关键字定义为变量
+        Command             Target              Value
+        store               selenium ide        value
+        type                id=kw               ${value}
+本章小结
+    Selenium IDE的使用:录制与回放脚本,如何修改与编辑脚本,在脚本中添加了断言与验证
+    满足小型且相对简单的自动化测试工作

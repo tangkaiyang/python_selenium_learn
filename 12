@@ -1,0 +1,267 @@
+BDD框架值Lettuce入门目前只支持python2
+12.1 什么是BDD
+1)TDD:测试驱动开发(Test-Driven Development)
+测试驱动开发时敏捷开发中的遗像核心实践和技术,也是一种设计方法论.TDD的原理是在开发功能代码之前,先编写单元测试用例代码,测试代码确定需要编写什么产品代码.TDD的基本思路就是通过测试来推动整个开发的进行,但测试驱动开发并不只是单纯的测试工作,而是把需求分析,设计和质量控制量化的过程.TDD首先考虑使用需求(对象,功能,过程,接口等),主要是编写测试用例框架对功能的过程和接口进行设计,而测试框架可以持续进行验证
+2)ATDD:验收测试驱动开发(Acceptance Test Driven Development)
+验收测试驱动开发是一种时间.在准备实施一个功能或特性之前,团队首先需要定义出期望的质量标准和验收细则,以明确且达成同识的验收测试计划(包含一系列测试场景)来驱动开发人员的功能开发实现和测试人员的测试脚本开发.面向开发人员,强调如何实现系统以及如果通过验收测试
+3)BDD:行为驱动开发(Behavior Driven Development)
+行为驱动开发时一种敏捷软件开发技术,它鼓励软件项目中的开发者,QA,非技术人员或商业参与者之间的协作.主要是从用户的需求触发,强调系统行为.BDD最初由DanNorth在2003年命名,它包括验收测试和客户测试驱动等极限编程的实践,作为对测试驱动开发的回应.
+不同语言下的BDD框架:
+Cucumber(Ruby)
+Jdave(Java)
+Behat(PHP)
+Behave(Python) http://pythonhosted.org/behave
+Lettuce(Python) http://Lettuce.it
+基于Ruby编写的Cucumber由于发展较高且比较成熟,在BDD领域有相当的知名度.而Lettuce可以看作是Python版的Cucumber.它用于Python项目的自动化测试,它可以执行纯文本的功能描述,一个非常有用且迷人的BDD(行为驱动开发)框架.
+本章讲解基于官方文档
+Lettuce使开发和测试过程变得很容易,它有很好的可扩展性,可读性,它允许我们用自然语言去描述一个系统的行为
+    [a]描述的行为 describe behavior
+    [b]用Python定义步骤 define steps in python
+    [c]运行并观看它失败 run and watch it fail
+    [d]编写代码以使其通过    write code to make it pass
+    [e]运行并观看它通过 run and watch it pass
+12.2 安装Lettuce
+http://Lettuce.it/
+pip安装Lettuce
+pip install lettuce
+Windows命令提示符下输入lettuce,报错,因为没有创建Lettuce项目
+12.3阶乘的例子
+下面是python语言实现阶乘的两种方式
+factorial.py
+#循环实现阶乘
+def f1(n):
+    c = 1
+    for i in range(n):
+        i = i + 1
+        c = c + 1
+    return c
+
+#递归实现阶乘
+def f2(n):
+    if n > 1:
+        return n*f2(n-1)
+    else:
+        return 1
+if __name__ == '__main__':
+    #调用方法
+    print(f1(10))
+    print(f2(10))
+12.3.2 编写BDD实现
+创建以下目录结构
+projects/mymath/tests/
+					features/
+						zero.feature
+						steps.py
+zero.feature
+Feature: Comupte factorial
+	In order to play with Lettuce
+	As beginners
+	We'll implement factorial
+Scenario: Factorial of 0
+	Given I have the number 0
+	When I compute its factorial
+	Then I see the number1
+第一段为功能介绍,描述需要实现什么功能;第二段为场景描述,也可以看做是一条测试用例,当我输入什么数据,执行什么操作后,预期程序应该返回什么结果
+Lettuce语法规则
+	Feature (功能)
+	Scenario(情景)
+	Given(给定)
+	And(和)
+	When(当)
+	Then(则)
+Lettuce关键字的含义与单元测试框架中的概念对比图
+	Lettuce						unittest
+	Feature(功能)				test suite(测试用例集)
+	Scenario(情景)				test case(测试用例)
+	Given(给定条件)				setup(测试步骤)
+	When(当)						test run(触发测试执行)
+	Then(则)						assert(断言,验证结果)
+上面的zero.feature文件作指导,steps.py文件编写实现阶乘的代码
+steps.py
+from lettuce import *
+
+
+@step('I have the number (\d+)')
+def have_the_number(step, number):
+	world.number = int(number)
+
+@step('I compute its factorial')
+def compute_its_factorial(step):
+	world.number = factorial(world.number)
+
+@step('I see the number (\d+)')
+def check_number(step, expected):
+	expected = int(expected)
+	assert world.number == expected, "Got %d" % world.number
+
+def factorial(number):
+	number = int(number)
+	if (number == 0) or (number == 1):
+		return 1
+	else:
+		return number
+逐步分析steps.py和zero.feature是如何产生联系的
+import lettuce import *
+1) 引入Lettuce下面的所有类和方法
+@step('I have the number (\d+)')
+def have_the_number(step, number):
+	world.number = int(number)
+	@step是Python装饰器的写法,也就是have_the_number()函数由@step()进行装饰
+	I have the number(\d+)对应于zero.feature文件中的第六句: "Given I have the number 0"
+	(\d+)是一个正则表达式,\d表示匹配一个数字,+表示匹配的数字至少有一个或多个
+2)定义一个have_the_number函数,把@step(I have the number (\d+))匹配到的数字0作为函数的入参,然后将其转换成整型(int)赋值给world.number变量
+@step('I compute its factorial')
+def compute_its_factorial(step):
+	world.number = factorial(world.number)
+3)把have_the_number()函数中的world.number的变量值0作为factorial()函数的入参,并把factorial()函数的返回值赋值给变量world.number
+I compute its factorial 对应于 zero.feature文件中的第七句: "When I compute its factorial."
+def factorial(number):
+	number = int(number)
+	if (number == 0) or (number == 1):
+		return 1
+	else:
+		return number
+4)计算整数的阶乘,在第二步中调用此函数.判断参数如果等于0或1的话直接返回1,否则返回具体的数.该函数在have_the_number()中被调用
+@step('I see the number (\d+)')
+def check_number(step, expected):
+	expected = int(expected)
+	assert world.number == expected, "Got %d" % world.number
+expected获取zero.feature文件中的预期结果,与第三步返回的实际结果world.number进行对比;通过assert函数进行断言结果是否正确
+I see the number(\d+)对应于zero.feature文件中的第八句:"Then I see the number 1."
+运行Lettuce
+运行cmd,切换到tests目录下,执行"Lettuce"命令
+运行过程很清晰,首先使zero.feature文件里的功能描述(feature),然后是场景(scenario)每一步所对应的steps.py中的哪一行代码
+	最后给出运行结果:
+	Feature(1 passed):   一个功能通过
+	Scenario(1 passed):		一个场景通过
+	Steps(3 passed):	三个步骤通过
+12.3.3 添加测试场景
+zero.feature
+Feature: Compute factorial
+	In order to play with Lettuce
+	As beginners
+	We'll implement factorial
+
+Scenario: Factorial of 0
+	Given I have the number 0
+	When I compute its factorial
+	Then I see the number 1
+Scenario: Factorial of 1
+	Given I have the number 1
+	When I compute its factorial 
+	Then I see the number 1
+Scenario: Factorial of 2
+	Given I have the number 2
+	When I compute its factorial
+	Then I see the number 2
+Scenario: Factorial of 3
+	Given I have the number 3
+	When I compute its factorial
+	Then I see the number 6
+运行Lettuce代码,报错
+修改steps.py
+...
+def factorial(number):
+	number = int(number)
+	if (number == 0) or (number == 1):
+		return 1
+	else:
+		return number*factorial(number-1)
+12.3.4 Lettuce目录结构与执行过程
+BDD开发主要与两类文件打交道:Feature和相应的Step文件.Feature文件是以feature为后缀名的文件,以Given-When-Then的方式描述了系统的场景(scenario)行为;Step文件为普通的Python程序文件,Feature文件中的每一个Given-When-Then步骤在Step文件中都有对应的Python执行代码,两类文件通过正则表达式相关联
+另外需注意的是,Feature文件一定要在features目录下,否则会提示"could not find features at\features".而Step文件可放在任意目录下都被执行到
+12.4 Lettuce_webdriver自动化测试
+Lettuce_webdriver术语独立的Python第三方扩展,它支持通过Lettuce运行Selenium WebDriver自动化测试用例
+步骤:
+	安装Lettuce
+	安装Lettuce_webdriver
+		下载地址:https://pypi.python.org/pypi/Lettuce_webdriver
+		pip安装: pip install lettuce_webdriver
+	安装nose
+		nose继承自unittest,属于第三方Python单元测试框架,且更容易使用
+		Lettuce_webdriver的运行依赖于nose框架
+		nose下载地址:https://pypi.python.org/pypi/nose
+		pip安装:pip install nose
+以百度搜索为例,创建如下目录结构
+	tests/features/
+				step_definitions/
+						steps.py
+				support/
+						terrain.py
+				baidu.feature
+baidu.feature
+Feature: Baidu search test case
+Scenario: search selenium
+Given I go to "http://www.baidu.com/"
+	When I fill in field with id "kw" with "selenium"
+	And I click id "su" with baidu once
+	Then I should see "seleniumhq.org" within 2 second
+	Then I close browser
+接下来根据行为描述文件在step_definitions目录下编写相应的测试脚本
+steps.py
+# coding=utf-8
+from lettuce import *
+from lettuce_webdriver.util import assert_false
+from lettuce_webdriver.util import AssertContextManager
+
+
+def input_frame(browser, attribute):
+	xpath = "//input[@id='%s']" % attribute
+	elems = browser.find_elements_by_xpath(xpath)
+	return elems[0] if elems else False
+
+def click_button(browser, attribute):
+	xpath = "//input[@id='%s']" % attribute
+	elems = browser.find_elements_by_xpath(xpath)
+	return elems[0] if elems else False
+
+#定位输入框关键字
+@step('I fill in field with id "(.*?)" with "(.*?)"')
+def baidu_text(step, field_name, value):
+	with AssertContextManager(step):
+		text_field = input_frame(world.browser, field_name)
+		text_field.clear()
+		text_field.send_keys(value)
+
+#点击"百度一下"按钮
+@step('I click id "(.*?)" with baidu once')
+def baidu_click(step, field_name):
+	with AssertContextManager(step):
+		click_field = click_button(world.browser, field_name)
+		click_field.click()
+#关闭浏览器
+@step('I close browser')
+def close_browser(step):
+	world.browser.quit()
+在support目录下创建terrain.py文件,用于定义测试脚本的基本配置
+terrain.py
+from selenium import webdriver
+from lettuce import before, world
+import lettuce_webdriver.webdriver
+
+@before.all
+def setup_browser():
+	world.browser = webdriver.Firefox()
+
+terrain文件配置浏览器驱动,作用域所以测试用例
+在.../tests/目录下输入"Lettuce"命令执行测试脚本
+
+打开baidu.feature文件,继续添加新的测试场景
+baidu.feature
+Feature: Baidu search test case
+
+Scenario: search selenium
+	Given I go to "http://www.baidu.com/"
+	When I fill in field with id "kw" with "selenium"
+	And I click id "su" with baidu once
+	Then I should see "seleniumhq.org" within 2 second
+Secnario: search lettuce_webdriver
+	Given I go to "http://www.baidu.com/"
+	When I fill in field with id "kw" with "selenium"
+	And i click id "su" with baidu once
+	Then I should see "www.w3.org/TR/webdriver/" within 2 second
+	Then I close browser
+唯一需要注意的是,浏览器的关闭"Then I close browser"放在最后一个场景执行,否则会出现错误.
+本章小结:
+	BDD的介绍,并与Lettuce为例介绍了如何通过BDD模式开发软件功能.
+	通过Lettuce_webdriver进行Web自动化测试的编写

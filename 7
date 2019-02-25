@@ -1,0 +1,646 @@
+unittest单元测试框架
+单元测试框架并非只能用于代码级别的测试
+1)提供用例组织与执行:
+2)提供丰富的比较方法:通过断言断定用例是否执行通过.单元测试框架提供了丰富的断言方法>判断不等/相等,包含/不包含,True/False的断言方法
+3)提供了丰富的日志:例如:总执行时间,失败用例数,成功用例数等
+7.1 unittest
+    单元测试负责对最小的软件设计单元(模块)进行验证,
+    python下的单元测试框架,如doctest,unittest,pytest,nose等
+    unittest(源码PyUnit框架)为Python语言自带的单元测试框架,Python2.1及其以后版本已将unittest作为一个标准模块放入Python开发包中
+7.1.1 单元测试
+    单元测试:通过一段代码去验证另一段代码
+        calculator.py
+        #计算器类
+        class Count:
+
+            def __init__(self, a, b):
+                self.a = int(a)
+                self.b = int(b)
+
+            #计算加法
+            def add(self):
+                return self.a + self.b
+    创建一个Count类用于两个整数的计算,通过__init__()方法对两个数进行初始化,接着创建add()方法返回两个数相加的结果
+        test.py
+        from calculator import Count
+        #测试两个整数相加
+        class TestCount:
+            def test_add(self):
+                try:
+                    j = Count(2, 3)
+                    add = j.add()
+                    assert(add == 5), 'Integer addition result error!'
+                except AssertionError as msg:
+                    print(msg)
+                else:
+                    print("Test pass!")
+        #执行测试类的测试方法
+        mytest = TestCount()
+        mytest.test_add()
+    首先,引入calculator文件中的Count类;然后在test_add()方法中调用Count类并传入两个参数2和3;最后调用Count类中的add()方法对两个参数做加法运算,并通过assert()方法判断add()的返回值是否等于5.如果不相等则抛出自定义的"Integer addition result error!"异常信息,如果相等则打印"Test pass!"
+    这种测试方法没有一定的规范可以遵循,代码维护麻烦.其次,需要编写大量的辅助代码才能进行单元测试,在test.py中用于测试的代码甚至比被测试的代码还要多,而且这仅仅是一个测试用例,对一个单元模块来说,只编写一条测试用来显然是不够的
+    为了让单元测试代码更容易维护和编写,最好的方式是遵循一定的规范来编写测试用例,这也是单元测试框架诞生的初衷
+    通过unittest单元测试框架编写单元测试用例
+    test.py
+    from calculator import Count
+    import unittest
+
+    class TestCount(unittest.TestCase):
+        def setUp(self):
+            print("test start")
+        def test_add(self):
+            j = Count(2, 3)
+            self.assertEqual(j.add(), 5)
+        def tearDown(self):
+            print("test end")
+    if __name__ == '__main__':
+        unittest.main()
+    分析上面的代码,首先引入unittest模块,创建TestCount类继承unittest的TestCase类,我们可以将TestCase类看成是对特定类进行测试的集合
+    setUp()方法用于测试用例执行前的初始化工作,这里只简单打印"test start"信息.tearDown()方法与setUp()相呼应,用于测试用例执行之后的善后工作,这里打印"test end"信息
+    在test_add()中首先调用Count类并传入要计算的数,通过调用add()方法得到两数相加的返回值.这里不再使用繁琐的异常处理,而是调用unittest框架所提供的assertEqual()方法对add()的返回值进行断言,判断两者是否相等,assertEqual()方法由TestCase类继承而来
+    unittest提供了全局的main()方法,使用它可以方便地将一个单元测试模块编程可以直接运行的测试脚本.main()方法使用TestLoader类来搜索所有包含在该模块中以"test"命名开头的测试方法,并自动执行他们
+        Python知识补充:
+            if __name__ == "__main__":语句说明
+            在后面实例中我们会经常用到这个语句,在解释它之前先补充点Python知识:
+                1.Python文件的后缀为.py
+                2..py文件既可以用来直接执行,就像一个小程序一样,也可以用来作为模块被导入
+                3.在Python中导入模块一般使用的是import
+            顾名思义,if就是如果的意思,在句子开始处加上if,就说明这个句子是一个条件语句.接着是__name__,__name__作为模块的内置属性,简单的说,就是.py文件的调用方式.最后是__main__,如上所述,.py文件有两种使用方式:作为模块被调用和直接使用,如果它等于"__main__"就表示是直接使用
+7.1.2 重要的概念
+    unittest:4个重要的概念
+    test fixture, test case, test suite, test runner
+    理解上述概念才能理解单元测试的基本特征
+    1.Test Case
+    一个TestCase的实例就是一个测试用例.一个完整的测试流程,包括测试前准备环境的搭建(setUp),实现测试过程的代码(run),以及测试后环境的还原(tearDown).单元测试(unit test)的本质就在这里,一个测试用例就是一个完整的测试单元,通过运行这个测试单元,可以对某一个功能进行验证
+    2.Test Suite
+    一个功能的验证往往需要多个测试用例,可以把多个测试用例集合在一起来执行,这就产生了测试套件TestSuite的概念.Test Suite用来组装当个测试用例.可以通过addTest加载TestCase到TestSuite中,从而返回一个TestSuite实例
+    3.Test Runner
+    测试的执行也是单元测试中非常重要的一个概念,一般单元测试框架中都会提供丰富的执行策略和执行结果.在unittest单元测试框架中,通过TextTestRunner类提供的run()方法来执行test suite/test case.test runner可以使用图形界面,文本界面,或返回一个特殊的值等方式来表示测试执行的结果
+    4.Test Fixture
+    对一个测试用例环境的搭建和销毁,就是一个fixture,通过覆盖TestCase的setUp()和tearDown()方法来实现.比如在这个测试用例中需要访问数据库,那么可以在setUp()中通过建立数据库连接来进行初始化,在tearDown()中清除数据库产生的数据,然后关闭连接等
+    注意:tearDown的过程很重要,要为下一个test case留下一个干净的环境
+    test.py
+        from calculator import Count
+        import unittest
+
+        class TestCount(unittest.TestCase):
+            def setUp(self):
+                print("test start")
+            def test_add(self):
+                j = Count(2, 3)
+                self.assertEqual(j.add(), 5)
+            def test_add2(self):
+                j = Count(41, 76)
+                self.assertEqual(j.add(), 117)
+            def tearDown(self):
+                print("test end")
+        if __name__ == '__main__':
+            #构造测试集
+            suite = unittest.TestSuite()
+            suite.addTest(TestCount("test_add2"))
+            #执行测试
+            runner = unittest.TextTestRunner()
+            runner.run(suite)
+#addTest方法失效,代码问题?PyCharm与直接运行py文件结果不一致
+    从执行结果可以看出,setUp/tearDown作用于测试用例的开始与结束
+7.1.3 断言方法
+    用例是否执行通过,是通过判断测试得到的实际结果与预期结果是否相等决定的
+    unittest框架的TestCase类提供的方法
+    方法                          检查                      版本
+    assertEqual(a, b)               a == b
+    assertNotEqual(a, b)            a != b
+    assertTrue(x)                   bool(x) is True
+    assertFalse(x)                  bool(x) is False
+    assertIs(a, b)                  a is b
+    assertIsNot(a, b)               a is not b
+    assertIsNone(x)                 x is None
+    assertIsNotNone(x)              x is not None
+    assertIn(a, b)                  a in b
+    assertNotIn(a, b)               a not in b
+    assertIsInstance(a, b)          isinstance(a, b)
+    assertNotIsInstance(a, b)       not isinstance(a, b)
+    -assertEqual(first, second, msg=None)
+    断言第一个参数和第二个参数是否相等,如果不相等则测试失败.msg为可选参数,用于定义测试失败时打印的信息
+    test.py
+        import unittest
+
+        class Test(unittest.TestCase):
+            def setUp(self):
+                number = input("Enter a number:")
+                self.number = int(number)
+            def test_case(self):
+                self.assertEqual(self.number, 10, msg="Your input is not 10!")
+            def tearDown(self):
+                pass
+        if __name__ == '__main__':
+            unittest.main()
+    注意:此例使用Python自带的IDLE运行,因为执行过程需要用户输入
+    在setUp()方法中要求用户输入一个数,在test_case()中通过assertEqual()比较输入的数是否等于10,如果不相等则输出msg中定义的提示信息
+    assertNotEqual(first, second, msg=None)与assertEqual()相反,它用于断言第一个参数与第二个参数是否不相等,如果相等则测试失败
+    -assertTrue(expr, msg=None)
+    -assertFalse(expr, msg=None)
+    实现判断一个数是否为质数的功能
+    质数(素数)是指只能被1和它本身整除的数
+    count.py
+    #用于判断质数
+    def is_prime(n):
+        if n <= 1:
+            return False
+    for i in range(2, n):
+        if n % i == 0:
+            return False
+    return True
+    创建is_prime()函数用于实现对质数的判断
+    -assertIn(first, second, msg=None)
+    -assertNotIn(first, second, msg=None)
+    断言第一个参数是否在第二个参数中,反过来讲,第二个参数是否包含第一个参数
+    test.py
+        import unittest
+        class Test(unittest.TestCase):
+            def setUp(self):
+                print("test start")
+            def test_case(self):
+                a = 'hello'
+                b = 'hello world'
+                self.assertIn(a, b, msg="a is not in b")
+            def tearDown(self):
+                print("test end")
+        if __name__ == "__main__":
+            unittest.main()
+    -assertIs(first, second, msg=None)
+    -assertNotIs(first, second, msg=None)
+    断言第一个参数和第二个参数是否为同一对象
+    -assertIsNone(expr, msg=None)
+    -assertNotNone(expr, msg=None)
+    断言表达式是否为None对象
+    -assertIsInstance(obj, cls, msg=None)
+    -assertNotIsInstance(obj, cls, msg=None)
+    断言obj是否为cls的一个实例
+    unittest中还提供可其他检查比较的方法,不常用
+7.1.4 组织单元测试用例
+    unittest单元测试框架拓展和组织新增的测试用例
+    calculator.py文件,为其拓展sub()方法,用来计算两个数相减的结果
+    calculator.py
+    #计算器类
+    class Count():
+    	def __init__(self, a, b):
+    		self.a = int(a)
+    		self.b = int(b)
+
+		#计算加法
+		def add(self):
+			return self.a + self.b
+		#计算减法
+		def sub(self):
+			return self.a - self.b
+	test1.py
+	from calculator import Count
+	import unittest
+
+	class TestAdd(unittest.TestCase):
+		def setUp(self):
+			print("test add start")
+		def test_add(self):
+			j = Count(2, 3)
+			self.assertEqual(j.add(), 5)
+		def test_add2(self):
+			j = Count(41, 76)
+			self.assertEqual(j.add(), 117)
+		def tearDown(self):
+			print("test add end")
+	class TestSub(unittest.TestCase):
+		def setUp(self):
+			print("test sub start")
+		def test_sub(self):
+			j = Count(2, 3)
+			self.assertEqual(j.sub(), -1)
+		def test_sub2(self):
+			j = Count(71, 46)
+			self.assertEqual(j.sub(), 25)
+		def tearDown(self):
+			print("test sub end")
+
+	if __name__ == '__main__':
+		#构造测试集
+		suite = unittest.TestSuite()
+		suite.addTest(TestAdd("test_add"))
+		suite.addTest(TestAdd("test_add2"))
+		suite.addTest(TestSub("test_sub"))
+		suite.addTest(TestSub("test_sub2"))
+
+		#运行测试集合
+		runner = unittest.TextTestRunner()
+		runner.run(suite)
+	上例中创建了TestAdd()和TestSub()两个测试类,分别测试calculator.py文件中的add()和sub()两个功能.通过TestSuite类的addTest()方法把不同测试类中的测试方法组装到测试套件中
+	通过测试结果可以看出,setUp()和tearDown()方法分别作用于每个测试用例的开始与结束.如果每个类中的setUp()和tearDown()所作的事情是一样的,就可以封装一个自己的测试类?
+	test2.py
+		from calculator import Count
+		import unittest
+
+		calss MyTest(unittest.TestCase):
+			def setUp(self):
+				print("test case start")
+			def tearDown(self):
+				print("test case end")
+		class TestAdd(MyTest):
+			def test_add(self):
+				j = Count(2, 3)
+				self.assertEqual(j.add(), 5)
+			def test_add2(self):
+				j = Count(41, 76)
+				self.assertEqual(j.add(), 117)
+		class TestSub(MyTest):
+			def test_sub(self):
+				j = Count(2, 3)
+				self.assertEqual(j.sub(), -1)
+			def test_sub2(self):
+				j = Count(71, 46)
+				self.assertEqual(j.sub(), 25)
+		if __name__ == "__main__":
+			unittest.main()
+	创建MyTest()类的好处显而易见,对于测试类和测试方法来说,应将注意力放在具体测试用例的编写上,无需关注setUp()和tearDown()所作的事情,不过,前提条件是setUp()和tearDown()所作的事情是每个用例都需要的
+7.1.5 discover更多测试用例
+	如果把所有的测试用例都写在一个test.py文件中,那么这个文件会越来越臃肿,后期维护起来也比较麻烦.需要将这些用例按照所测试的功能进行拆分,分散到不同的测试文件中
+	对上例中的test.py文件的测试用例进行拆分,拆分后的目录结构如下:
+		testpro/
+			count.py
+			testadd.py
+			testsub.py
+			runtest.py
+	拆分后实现代码如下
+	testadd.py
+		from calculator import Count
+		import unittest
+
+		class TestAdd(unittest.TestCase):
+			def setUp(self):
+				print("test case start")
+			def tearDown(self):
+				print("test case end")
+			def test_add(self):
+				j = Count(2, 3)
+				self.assertEqual(j.add(), 5)
+			def test_add2(self):
+				j = Count(41, 76)
+				self.assertEqual(j.add(), 117)
+		if __name__ == '__main__':
+			unittest.main()
+	testsub.py
+		from calculator import Count
+		import unittest
+
+		class TestSub(unittest.TestCase):
+			def setUp(self):
+				print("test case start")
+			def tearDown(self):
+				print("test case end")
+			def test_sub(self):
+				j = Count(2, 3)
+				self.assertEqual(j.sub(), -1)
+			def test_sub2(self):
+				j = Count(76, 41)
+				self.assertEqual(j.sub(), 35)
+		if __name__ == '__main__':
+			unittest.main()
+	接着创建用于执行所有用例的runtest.py文件
+	runtest.py
+		import unittest
+		#加载测试文件
+		import testadd
+		import testsub
+		#构造测试集
+		suite = unittest.TestSuite()
+
+		suite.addTest(testadd.TestAdd("test_add"))
+		suite.addTest(testadd.TestAdd("test_add2"))
+
+		suite.addTest(testsub.TestSub("test_sub"))
+		suite.addTest(testsub.TestSub("test_sub2"))
+
+		if __name__ == '__main__':
+			#执行测试
+			runner = unittest.TextTestRunner()
+			runner.run(suites)
+	这样拆分带来了好处,可以根据不同的功能创建不同的测试文件,甚至是不同的测试目录,测试文件中还可以将不同的小功能划分为不同的测试类,在类下编写测试用例,整体结构更加清晰
+	这样的设计看上去很完美,但依然没有解决添加用例的问题,当用例达到成百上千条时,在runtest.py文件通过addTest()添加/删除测试用例变得非常麻烦,
+	TestLoader类中提供了discover()方法可以解决这个问题
+	TestLoader
+	该类负责根据各种标准加载测试用例,并将他们返回给测试套件.正常情况下,不需要创建这个类的实例.unittest提供了可以共享的defaultTestLoader类,可以使用其子类和方法创建实例,discover()方法就是其中之一
+	discover(start_dir, pattern='test*.py', top_level_dir = None)
+	找到指定目录下所有测试模块,并可递归查到子目录下的测试模块,只有匹配到文件名才能被加载.如果启动的不是顶层目录,那么顶层目录必须单独指定
+		start_dir:要测试的模块名或测试用例目录
+		pattern='test*.py':表示用例文件名的匹配规则.此处匹配文件名以"test"开头的".py"类型的文件,星号"*"表示任意多个字符
+		top_level_dir = None:测试模块的顶层目录,如果没有顶层目录,默认为None
+	通过discover()方法重新实现runtest.py文件的功能
+	runtest.py
+		import unittest
+		#定义测试用例的目录为当前目录
+		test_dir = './'
+		discover = unittest.defaultTestLoader.discover(test_dir, pattern = 'test*.py')
+
+		if __name__ == '__main__':
+			runner = unittest.TextTestRunner()
+			runner.run(discover)
+7.2 关于unittest还需要知道的
+7.2.1 用例执行的顺序
+	用例执行顺序涉及多个层级:在多个测试目录的情况下,先执行哪个目录?在多个测试文件的情况下,先执行哪个文件?在多个测试类的情况下,先执行哪个测试类?在多个测试方法(用例)的情况下,先执行哪个测试方法?
+	test.py
+		import unittest
+
+		class TestBdd(unittest.TestCase):
+			def setUp(self):
+				print("test TestBdd :")
+			def test_ccc(self):
+				print("test ccc")
+			def test_aaa(self):
+				print("test aaa")
+			def tearDown(self):
+				pass
+		class TestAdd(unittest.TestCase):
+			def setUp(self):
+				print("test TestAdd :")
+			def test_bbb(self):
+				print("test bbb")
+			def tearDown(self):
+				pass
+		if __name__ == '__main__':
+			unittest.main()
+	unittest框架默认根据ASCII码的顺序加载测试用例,数字与字母的顺序为:0~9, A~Z,a~z.所以,TestAdd类会优先于TestBdd类被执行,test_aaa()方法会优先于test_ccc()被执行,因而它并没有按照用例从上到下的顺序执行
+	对应测试目录与测试文件来说,unittest框架同样是安装这个规则来加载测试用例的
+	让test_ccc()先执行?不使用默认的main()方法,通过TestSuite类的addTest()方法按照一定的顺序来加载
+	test.py
+		.....
+		if __name__ == '__main__':
+			#构造测试集
+			suite = unittest.TestSuite()
+			suite.addTest(TestBdd("test_ccc"))
+			suite.addTest(TestAdd("test_bbb"))
+			suite.addTest(TestBdd("test_aaa"))
+		#执行测试
+		runner = unittest.TextTestRunner()
+		runner.run(suite)
+	现在执行的顺序就是addTest()方法所加载的顺序.discover()的加载测试用例的规则与main()方法相同.所以,我们只能通过测试用例的命名来提高被执行的优先级.例如,将希望先被执行的测试用例命名为"test_a",将希望最后执行的测试用例命名为"test_z"
+7.2.2 执行多级目录的用例
+	我们要控制Web用例的数量,但是当测试用例达到一定量级时,就要考虑划分目录,
+	比如规划如下测试目录:
+		test_project/test_case/
+			|----test_bbb/
+			|	|----test_ccc/
+			|	|	|----test_c.py
+			|	|----test_b.py
+			|----test_ddd/
+			|	|----test_d.py
+			|----test_a.py
+	对应上面的目录结构,如果将discover()方法中的start_dir参数定义为"./test_case/"目录,那么只能加载test_a.py文件中的测试用例.怎样让unittest框架查找到test_case/的子目录中的测试文件呢?,
+
+在每一个子目录下放一个__init__.py文件.
+
+7.2.3 跳过测试和预期失败
+	在运行测试时,有时需要直接跳过某些测试用例,或者当用例符合某个条件时跳过测试,又或者直接将测试用例设置为失败.
+	unittest提供了实现这些需求的装饰器
+		unittest.skip(reason)
+		无条件地跳过装饰的测试,说明跳过测试的原因
+		unittest.skipIf(condition, reason)
+		跳过装饰的测试,如果条件为真时
+		unittest.skipUnless(condition, reason)
+		跳过装饰的测试,除非条件为真
+		unittest.expectedFailure()
+		测试标记为失败.不管执行结果是否失败,统一标记为失败
+	test.py
+		import unittest
+		class MyTest(unittest.TestCase):
+			def setUp(self):
+				pass
+			def tearDown(self):
+				pass
+			@unittest.skip("直接跳过测试")
+			def test_skip(self):
+				print("test aaa")
+			@unittest.skipIf(3>2, "当条件为True时跳过测试")
+			def test_skip_unless(self):
+				print('test ccc')
+			@unittest.expectedFailure
+			def test_expected_failure(self):
+				assertEqual(2, 3)
+		if __name__ == '__main__':
+			unittest.main()
+	上面共创建了4条测试用例.第一条通过@unittest.skip()装饰,直接跳过不执行.第二条通过@unittest.skipIf()装饰,当条件为真时不执行,3>2条件为真;第三条通过@unittest.skipUnless()装饰,当条件为真时执行;第四条通过@unittest.exceptedFailure装饰,不管执行结果是否失败,统一标记为失败.但不会抛出错误信息
+	这些方法同样可以作用于测试类,只需将他们定义在测试类上面即可
+	test.py
+		import unittest
+		@unittest.skip("直接跳过测试该测试类")
+		class MyTest(unittest.TestCase):
+		...
+
+7.2.4 fixtures
+fixtures的概念前面已经有过简单的介绍,可以形象地把它看做是夹心饼干外层的两片,这两片饼干就是setUp/tearDown,中间的就是测试用例,除此之外,unittest还提供了更大范围的fixtures,例如对于测试类和模块的fixtures
+	test.py
+	import unittest
+	def setUpModule():
+		print("test module start >>>>>>>>>>>")
+	def tearDownModule():
+		print("test module end >>>>>>>>>>>>>")
+
+	class Test(unittest.TestCase):
+		@classmethod
+		def setUpClass(cls):
+			print("test class end ===========>")
+		@classmethod
+		def tearDownClass(cls):
+			print("test class start =========>")
+		def setUp(self):
+			print("test case start -->")
+		def tearDown(self):
+			print("test case end -->")
+		def test_case(self):
+			print("test case1")
+		def test_case2(self):
+			print("test case2")
+	if __name__ == '__main__':
+		unittest.main()
+	setUpModule/tearDownModule:在整个模块的开始与结束时被执行
+	setUpClass/tearDownClass:在测试类的开始与结束时被执行
+	setUp/tearDown:在测试用例的开始与结束时被执行
+	需要注意的是:setUpClass/tearDownClass的写法稍微有些不同.首先,需要通过@classmethod进行装饰,其次方法的参数为cls.其实,cls与self并没有什么特别之处,都表示类方法的一个参数,只是大家约定俗成,习惯这样来命名,当然也可以用abc来代替
+7.3 带unittest的脚本分析
+	unittest框架与Web自动化测试之间的联系:
+	unittest可以组织,运行测试用例
+	首先,通过SeleniumIDE录制一个测试用例,
+	高版本seleniumide没有导出脚本功能,使用kalton....插件
+	导出脚本如下:
+		#-*- coding:UTF-8 -*-
+		from selenium import webdriver
+		from selenium.webdriver.common.by import By
+		from selenium.webdriver.common.keys import Keys
+		from selenium.webdriver.support.ui import Select
+		from selenium.common.exceptions import NoSuchElementException
+		from selenium.common.exceptions import NoAlertPresentException
+		import unittest, time, re
+
+		class BaiduTest(unittest.TestCase):
+			def setUp(self):
+				self.driver = webdriver.Firefox()
+				self.driver.implicitly_wait(30)
+				self.base_url = "http://www.baidu.com/"
+				self.verificationErrors = []
+				self.accept_next_alert = True
+			def test_baidu(self):
+				driver = self.driver
+				driver.get(self.base_url + "/")
+				driver.find_element_by_id("kw")clear()
+				driver.find_element_by_id("kw").send_keys("selenium ide")
+				driver.find_element_by_id("su").click()
+			def is_element_present(self, how, what):
+				try:
+					self.driver.find_element(by = how, value = what)
+				except NoSuchElementException, e:
+					return False
+				return True
+			def is_alert_present(self):
+				try:
+					self.driver.switch_to.alert
+				except NoAlertPresentException, e:
+					return False
+				return True
+			def close_alert_and_get_its_text(self):
+				try:
+					alert = self.driver.switch_to.alert
+					alert_text = alert.text
+					if self.accept_next_alert:
+						alert.accept()
+					else:
+						alert.dismiss()
+					return alert_text
+				finally:
+					self.accept_next_alert = True
+			def tearDown(self):
+				self.driver.quit()
+				self.assertEqual([], self.verificationErrors)
+		if __name__ == '__main__':
+			unittest.main()
+	分析上述脚本:
+		import unittest
+			首先引入unittest框架
+		class BaiduTest(unittest.TestCase):
+			BaiduTest类继承unittest框架的TestCase类成为标准的测试类
+		def setUp(self):
+			self.driver = webdriver.Firefox()
+			self.driver.implicitly_wait(30)
+			self.base_url = "http://www.baidu.com/"
+			self.verificationErrors = []
+			self.accept_next_alert = True
+			setUp用于设置初始化工作,在执行每一条测试用例前先被执行,它与tearDown方法相呼应,后者在每一个测试用例执行后被执行,这里的初始化工作定义了浏览器启动和基础URL地址
+			implicitly_wait()设置页面上元素的隐性等待时间为30秒
+			verificationErrors数组,脚本运行时的错误信息将会被记录到这个数组
+			定义accept_next_alert变量 ,表示是否接受下一个警告,初始状态为True
+		def test_baidu(self):
+			driver = self.driver
+			driver.get(self.base_url + "/")
+			driver.find_element_by_id("kw").clear()
+			driver.find_element_by_id("kw").send_keys("selenium ide")
+			driver.find_element_by_id("su").click()
+			test_baidu中放置的就是测试脚本
+		def is_element_present(self, how, what):
+			try:
+				self.driver.find_element(by = how, value =what)
+			except NoSuchElementException as e:
+				return False
+			return True
+			is_element_present方法用于查找页面元素是否存在,通过find_element()来接受元素的定位方法(how)和定位值(what).如果定位到元素则返回True,否则抛出异常并返回False.try...except...为python语言的异常处理
+		def is_alert_present(self):
+			try:
+				self.driver.switch_to.alert
+			except NoAlertPresentException as e:
+				return False
+			return True
+			is_alert_present()方法用于判断当前页面是否存在警告框,利用WebDriver提供的switch_to.alert方法来捕捉页面上警告框.如果捕捉到警告框返回True,否则将抛出NoAlertPresentException类型异常,并返回False
+			不过不管是否出现警告框,返回结果都为True.所以可以调整该方法为driver.switch_to.alert.text.用于获取当前页面上的警告提示信息.可以获取到就返回True,获取不到则返回False
+		def close_alert_and_get_its_text(self):
+			try:
+				alert = self.driver.switch_to.alert
+				alert_text = alert.text
+				if self.accept_next_alert:
+					alert.accept()
+				else:
+					alert.dismiss()
+				return alert_text
+			finally:
+				self.accept_next_alert = True
+			close_alert_and_get_its_text()关闭警告并获得警告信息.首先通过switch_to.alert获得警告,通过text获得警告框信息,接着通过if语句判断accept_next_alert的状态,在setUp()中已经初始化状态为True,如果为True,则通过accept()接受警告,否则dismiss()忽略此警告
+		def tearDown(self):
+			self.driver.quit()
+			self.assertEqual([], self.verificationErrors)
+			tearDown()方法在每个测试方法执行后调用,这个方法用于测试用例执行后的清理工作,如退出浏览器,关闭驱动,恢复用例执行状态等
+			在setUp()中定义了verificationErrors为空数组,这里通过assertEqual()比较其是否为空,如果为空则说明用例执行的过程中没有出现异常,否则将抛出AssertionError异常
+		if __name__ == '__main__':
+			unittest.main()
+			通过unittest.main()方法来运行当前文件中的测试方法,其默认匹配并运行以test开头的方法
+7.4 编写Web测试用例
+	测试目录的规划
+		test_project/
+		|---test_case/
+		|	|---test_baidu.py
+		|	|---test_youdao.py
+		|---report/
+		|	|---login.txt
+		|---runtest.py
+	创建Web测试用例
+	test_baidu.py
+	from selenium import webdriver
+	import unittest
+	import time
+
+	class MyTest(unittest.TestCase):
+		def setUp(self):
+			self.driver = webdriver.Firefox()
+			self.driver.maximize_window()
+			self.driver.implicitly_wait(10)
+			self.base_url = "http://www.baidu.com"
+		def test_baidu(self):
+			driver = self.driver
+			driver.get(self.base_url + "/")
+			driver.find_element_by_id("kw").clear()
+			driver.find_element_by_id("kw").send_keys("unittest")
+			driver.find_element_by_id("su").click()
+			time.sleep(2)
+			title = dirver.title
+			self.assertEqual(title, "unittest_百度搜索")
+		def tearDown(self):
+			self.driver.quit()
+	if __name__ == '__main__':
+		unittest.main()
+	test_youdao.py
+	from selenium import webdriver
+	import unittest
+	import time
+
+	class MyTest(unittest.TestCase):
+		def setUp(self):
+			self.driver = webdriver.Firefox()
+			self.driver.maximize_window()
+			self.driver.implicitly_wait(10)
+			self.base_url = "http://www.youdao.com"
+
+		def test_youdao(self):
+			driver = self.driver
+			driver.get(self.base_url + "/")
+			driver.find_element_by_id("query").clear()
+			driver.find_element_by_id("query").send_keys("webdriver")
+			driver.find_element_by_id("qb").click()
+			time.sleep(2)
+			title = driver.title
+			self.assertEqual(title, "webdriver - 有道搜索")
+		def tearDown(self):
+			self.driver.close()
+	if __name__ == '__main__':
+		unittest.main()
+	在test_case/目录下分别创建百度搜索test_baidu.py和有道搜索test_youdao.py测试文件,并在测试文件中编写Web自动化测试用例
+	runtest.py文件的创建请参考7.1.5节中的runtest.py的代码实现,唯一需要改动的就是指定新的测试目录为"./test_project/test_case",之后,就可以通过它来执行test_case目录下的测试用例了
+	保存测试结果
+	借助dos命令来实现log.txt文件
+	运行python文件时生成log.txt文件
+	python runtest.py >> report/log.txt 2>&1
+本章小结
+	python自带的unittest单元测试框架
+	使用unittest来编写web自动化测试用例.
+	利用其组织测试用例,断言预期结果以及批量执行测试用例的等功能

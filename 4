@@ -1,0 +1,919 @@
+WebDriver API
+4.1从定位元素开始
+输入框,按钮和文字链接,图片,文字,左侧下拉框.自动化模拟鼠标和键盘来操作这些元素,或单击,或输入,或鼠标悬停
+WebDriver提供了八种元素定位方法,
+id									name
+class name 							tag name
+link text							partial link text
+xpath								css selector
+find_element_by_id()				find_element_by_name()
+find_element_by_class_name()		find_element_by_tag_name()
+find_element_by_link_text()			find_element_by_partial_link_text()
+find_element_by_xpath()				find_element_by_css_selector()
+注意:这段代码并非百度首页的页面源代码,而是通过前端工具查看所得到的的页面代码,这样的HTML结构有如下特征
+1)它们由标签对组成
+<html></html>
+<body></body>
+<div></div>
+<form></form>
+html,div就是标签的标签名
+2)标签有各种属性
+<div id="head" class="s_down">
+<from class="well">
+<input id="kw" name="wd" class="s_ipt">
+3)标签对之间可以由文本数据:
+<a>新闻</a>
+<a>hao123</a>
+<a>地图</a>
+4)标签有层级关系
+<html>
+	<body>
+	</body>
+</html>
+<div>
+	<form>
+		<input />
+	</form>
+</div>
+4.1.1id定位
+HTML规定id属性在HTML文档中必须是唯一的
+find_element_by_id()方法通过id属性定位元素
+4.1.2name定位
+HTML规定name来指定元素的名称,因此作用更像人名.name的属性值,在当前页面中可以不唯一.通过name定位百度输入框
+find_element_by_name()方法通过name属性来定位元素.由于百度搜索按钮没有提供name属性,因此我们不能通过name属性来定位它
+4.1.3class定位
+HTML规定class来指定元素的类名.其用法与id,name类似,
+find_element_by_class_name()方法通过class属性来定位元素
+4.1.4tag定位
+HTML的本质就是通过tag来定义实现不同的功能,每一个元素本质上也是一个tag.因为一个tag往往用来定义一类功能,所以通过tag识别某个元素的概率很低.查看前端会发现大量的<div>,<input>,<a>等tag,所以很难通过标tagname去区分不同的元素
+通过标tag name定位百度的输入框与百度按钮会发现他们完全一样:
+find_element_by_tag_name()方法通过元素的tag name来定位元素
+4.1.5link定位
+link定位有所不同,专门用来定位文本链接.
+find_element_by_link_text("新闻")方法通过元素标签对之间的文本信息来定位元素
+4.1.6partial link定位
+partial link定位是link定位的一种补充,有些文本链接会比较长,我们可以取文本链接的一部分定位
+find_element_by_partial_link_text("文本链接")方法通过元素标签对之间的部分文本信息来定位元素
+理想状态下,在一个页面当中每一个元素都有唯一id和name属性值,我们可以通过他们的属性值来找到他们,但是实际却没想像这么美好,元素可以没有id,name属性,或者属性相同,或没刷新一次页面,id值都会随机变化
+Xpath CSS定位
+4.1.7 XPath定位
+XPath是一种在XML文档中定位元素的语言.因为HTML可以看做XML的一种实现,所以selenium用户可以使用这种强大的语言在web应用中定位元素
+	绝对路径定位
+	XPath多种定位策略,最简单直观的就是写出元素的绝对路径
+	find_element_by_xpath("/html/body/div/div[2]/div/div/div/from/span/input")百度输入框
+	find_element_by_xpath("/html/body/div/div[2]/div/div/div/from/span[2]/input")搜索按钮
+	find_element_by_xpath()方法使用XPath语言来定位元素.XPath主要用标签名层级关系来定位元素的绝对路径,最外层是html语言.在body文本内,一级一级往下查找,如果一个层级下有多个相同的标签名,那么就按上下顺序确定是第几个,例如div[2]表示当前层级下的第二个div标签
+	利用元素属性定位
+	除了使用绝对路径外,XPath也可以使用元素属性值来定位.
+	find_element_by_xpath("//input[@id='kw']") 百度输入框
+	find_element_by_xpath("//input[@id='su']") 搜索按钮
+	//表示当前页面某个目录下,input表示定位元素的标签名,[@id='kw']表示这个元素的id属性值等于kw
+	通过name和class属性值来定位
+	find_element_by_xpath("//input[@name='wd']")
+	find_element_by_xpath("//input[@class='s_ipt']")
+	find_element_by_xpath("//*[@class='bg s_btn']")
+	如果不想指定标签名,则也可以用*代替.当然使用XPath不局限于id,name,class这三个属性值,元素的任意属性值都可以使用,只要它能唯一的标识一个元素
+	find_element_by_xpath("//input[@maxlength='100']")
+	find_element_by_xpath("//input[@autocomplete='off']")
+	find_element_by_xpath("//input[@type='submit']")
+	层级与属性结合
+	如果一个元素本身没有可以唯一标识这个元素的属性值,那么我们可以找其上一级元素,如果它的上一级元素有可以唯一标识属性的值,也可以拿来使用
+	XPath描述:
+	    find_element_by_xpath("//span[@class='bg s_ipt_wr']/input")
+	    span[@class='bg s_ipt_wr']通过class属性定位到父元素,后面/input就表示父元素下面的子元素.如果父元素没有可利用的属性值,那么可以继续向上查找爷爷元素
+	    find_element_by_xpath("//form[@id='form']/span/input")
+	    find_element_by_xpath("//form[@id='form']/span[2]/input")
+    我们可以通过这种方法一级一级地向上查找,直到找到最外层<html>标签,这就是一个绝对路径的写法
+    使用逻辑运算符
+    如果一个属性不能唯一地区分一个元素,可以使用逻辑运算符连接多个属性来查找元素
+        ...
+            <input id="kw" class="su" name="ie">
+            <input id="kw" class="aa" name="ie">
+            <input id="bb" class="su" name="ie">
+        ...
+    使用逻辑运算符and来连接两个条件,同时使用id和class就会唯一地标识这个元素
+        find_element_by_xpath("//input[@id='kw' and @class='su']/span/input")
+        and同样可以连接更多的属性来唯一地标识一个元素
+4.1.8 CSS定位
+    CSS(Cascading Style Sheets)是一种语言,用来描述HTML和XML文档的表现.CSS使用选择器来为页面元素绑定属性.这些选择器可以被selenium用作另外的定位策略
+    CSS可以较为灵活地选择空间的任意属性,一般情况下定位速度比XPath快
+    CSS的语法与使用
+    CSS选择器常见语法:
+        选择器             例子              描述
+        .class              .intro          class选择器,选择class="intro"的所有元素
+        #id                 #firstname      id选择器,选择id="firstname"的所有元素
+        *                   *               选择所有元素
+        element             p               选择所有<p>元素
+        element>element     div>input       选择父元素为<div>的所有<input>元素
+        element+element     div+input       选择同一级中紧接在<div>元素之后的所有<input>元素
+        [attribute=value]   [target=_blank] 选择target="_blank"的所有元素
+    1)通过class属性定位
+    find_element_by_css_selector(".s_ipt")
+    find_element_by_css_selector(".bg s_btn")
+    find_element_by_css_selector()方法用于CSS语言定位元素,点号(.)表示通过class属性来定位元素
+    2)通过id属性定位:
+    find_element_by_css_selector("#kw")
+    find_element_by_css_selector("#su")
+    井号(#)表示通过id属性来定位元素
+    3)通过标签名定位:
+    find_element_by_css_selector("input")
+    在CSS语言中,用标签名定位元素不需要任何符号标识,直接使用标签名即可,但是标签名重复的概率很大,所以这种方式很难找到想要的元素
+    1)通过父子关系定位:
+    find_element_by_css_selector("span>input")
+    上面的写法表示有父亲元素,它的标签名为span,查找它的所有标签名为input的子元素
+    2)通过属性定位
+    find_element_by_css_selector("[autocomplete=off]")
+    find_element_by_css_selector("[name='kw']")
+    find_element_by_css_selector('[type="submit"]')
+    在CSS当中也可以使用元素的任意属性,只要这些属性可以唯一标识这个元素.对于属性值来说,可加引号,也可以不加,但注意和整个字符串的引号进行区分
+    3)组合定位
+    把上面的定位策略组合起来使用
+    find_element_by_css_selector("span.bg s_ipt_wr>input.s_ipt")
+    find_element_by_css_selector("span.bg s_btn_wr>input#su")
+    有一个父元素,它的标签名叫span;它有一个class属性值叫bg s_ipt_wr:它有一个子元素,标签名叫input,并且这个子元素的class属性值叫s_ipt
+    XPath与CSS类似功能的简单对比
+    定位方式                XPath                   CSS
+    标签                  //div                    div
+    By id               //div[@id='eleid']          div#eleid
+    By class            //div[@class='eleclass']    div.eleclass
+    By 属性               //div[@title='Move mouse here']     div[title=Move mouse here]
+                                                            div[title^=Move]
+                                                            div[title$=here]
+                                                            div[title*=mouse]
+    定位子元素           //div[@id='eleid']/*                div#eleid>*
+                        //div/h1                            div>h1
+4.1.9 用By定位元素
+    WebDriver提供的另一套写法,即统一调用find_element()方法,通过By来声明定位的方法,并且传入对应定位方法的定位参数
+    find_element(By.ID,"kw")
+    find_element(By.NAME,"wd")
+    find_element(By.CLASS_NAME,"s_ipt")
+    find_element(By.TAG_NAME,"input")
+    find_element(By.LINK_TEXT,"新闻")
+    find_element(By.PARTIAL_LINK_TEXT,"新")
+    find_element(By.XPATH,"//*[@class='bg s_btn']")
+    find_element(By.CSS_SELECTOR,"span.bg s_btn_wr>input#su")
+    find_element()方法只用于定位元素.需要两个参数,第一个是定位的类型,有By提供;第二个是定位的具体方式.在使用By之前需将By类导入
+    from selenium.webdriver.common.by import By
+    底层实现是一回事
+4.2 控制浏览器
+    WebDriver主要提供的是操作页面上各种元素的方法,但它也提供了操作浏览器的一些方法,例如控制浏览器的大小,操作浏览器前进和后退等
+4.2.1 控制浏览器窗口大小
+    WebDriver提供了set_window_size()方法来设置浏览器的大小
+        window_test.py
+            from selenium import webdriver
+            driver = webdriver.Firefox()
+            driver.get("http://m.mail.10086.cn")
+            #参数数字为像素点
+            print("设置浏览器款480,高800显示")
+            driver.set_window_size(480, 800)
+            driver.quit()
+    在PC端执行自动化脚本大多情况下是希望浏览器在全屏模式下执行,那么使用
+        maximize_window()方法使打开的浏览器全屏显示,其用法与set_window_size()相同,但它不需要参数
+4.2.2 控制浏览器后退,前进
+   在使用浏览器浏览网页时,浏览器提供了前进和后退按钮,可以方便地在浏览过的网页之间切换,WebDriver也提供了对应的back()和forward()方法来模拟后退和前进按钮
+        forward_back.py:
+            from selenium import webdriver
+            driver = webdriver.Firefox()
+            #访问百度首页
+            first_url = 'http://www.baidu.com'
+            print("now access %s" % (first_url))
+            driver.get(first_url)
+            #访问新闻页面
+            second_url = 'http://news.baidu.com'
+            print("now access %s" % (second_url))
+            driver.get(second_url)
+            #返回(后退)到百度首页
+            print("back to %s" % (first_url))
+            driver.back()
+            #前进到新闻页
+            print("forward to %s" % (second_url))
+            driver.forward()
+
+            driver.quit()
+4.2.3 模拟浏览器刷新
+    有时候需要手动刷新(F5)页面
+    WebDriver的refresh()方法
+4.3 简单元素操作
+    定位后需要对元素进行操作:
+    或单击(按钮)或输入(输入框)
+    WebDriver常用的几个方法
+        clear():        清除文本
+        send_keys(*value):      模拟按键输入
+        click():        单击元素
+4.3.1 QQ邮箱登录
+    loginQQ.py:
+        from selenium import webdriver
+        driver = webdriver.Firefox()
+        driver.get("https://mail.qq.com")
+
+        driver.find_element_by_id("u").clear()
+        driver.find_element_by_id("u").send_keys("945541696@qq.com")
+        driver.find_element_by_id("p").clear()
+        dirver.find_element_by_id("p").send_keys("TANGKAIYANG123")
+        driver.find_element_by_id("login_button").click()
+
+        driver.quit()
+    #可能会报找不到元素的错误:id动态变化,网页未加载完全等原因,冷静
+    clear()方法用于清除文本输入框中的内容.一般用于清除输入框中的默认提示信息
+    send_keys()方法模拟键盘想输入框中输入内容,还可以用它来发送键盘按键,甚至用它来模拟文件上传
+    click()方法用来单击一个元素,前提是它是可以被单击的对象,它与send_keys()方法是web页面操作中最常用到的两个方法.不仅可以单击一个按钮,还能单击任何可以单击的文字/图片链接,复选框,单选框,下拉框等
+4.3.2 WebElement接口常用方法
+    submit()
+    submit()方法用于提交表单.例如,在搜索框输入关键字之后的"回车"操作,就可以通过submit()方法模拟
+    youdao.py  
+        from selenium import webdriver
+        driver = webdriver.Firefox()
+        driver.get("http://www.youdao.com")
+        driver.find_element_by_id('query').send_keys('hello')
+        #提交输入框的内容
+        driver.find_element_by_id('query').submit()
+        driver.quit()
+            通过定位搜索框并通过submit()提交搜索框的内容,同样达到了单击"搜索"按钮的效果.有时候submit()可以与click()方法互换来使用,submit()同样可以提交一个按钮,但是submit()的应用范围远不及click()广泛
+    size:               返回元素的尺寸
+    text:               获取元素的文本
+    get_attribute(name) 获得属性值
+    is_displayed():     设置该元素是否用户可见
+    执行上面的程序并查看结果:size方法用于获取百度输入框的宽,高,text方法用于获取百度底部的备案信息,get_attribute()用于获得百度输入的type属性值,is_displayed()用于返回一个元素是否可见,如果可见则返回True,否则返回False
+    其他方法参考WebDriver API官方文档学习
+4.4 鼠标事件
+    前面click()来模拟鼠标的单击操作,Web产品其他鼠标交互方式:右击,双击,悬停,甚至是鼠标拖动等功能
+    在WebDriver中这些鼠标操作的方法封装在ActionChains类提供
+    ActionChains类提供了鼠标操作的常用方法
+    perform():              执行所有ActionChains中存储的行为
+    context_click():        右击
+    double_click():         双击
+    drag_and_drop():        拖动
+    move_to_element():      鼠标悬停
+    1.鼠标右击操作
+        对于ActionChains类提供的鼠标方法与前面的click()方法的用法有所不同,
+        对360网盘右键快捷菜单的操作如下
+        yunpan.py
+            from selenium import webdriver
+            #引入ActionChains 类
+            from selenium.webdriver.common.action_chains import ActionChains
+            driver = webdriver.Firefox()
+            driver.get("http://yunpan.360.cn")
+            #....
+            #定位到要右击的元素
+            right_click = driver.find_element_by_id("xxx")
+            #对定位到的元素执行鼠标右键操作
+            ActionChains(driver).context_click(right_click).perform()
+            #....
+        from selenium.webdriver import ActionChains
+        导入提供鼠标操作的ActionChains类
+        ActionChains(driver)
+        调用ActionChains()类,将浏览器驱动driver作为参数传入
+        context_click(right_click)
+        context_click()方法用于模拟鼠标右键操作,在调用时需要指定元素定位
+        perform()
+        执行所有ActionChains中存储的行为,可以理解成是对整个操作的提交动作
+    2.鼠标悬停
+    鼠标悬停弹出下拉菜单
+    move_to_element()方法可以模拟鼠标悬停的动作,其用法与context_click()相同
+        mouse.py
+        #...
+        #定位到要悬停的元素
+        above = driver.find_element_by_id("id")
+        #对定位到的元素执行悬停操作
+        ActionChains(driver).move_to_element(above).perform()
+        #...
+    3.鼠标双击操作
+    double_click()方法用于模拟鼠标双击操作
+    mouse.py
+        #.....
+        #定位到要悬停的元素
+        double_click = driver.find_element_by_id("xx")
+        #对定位到的元素执行双击操作
+        ActionChains(driver).double_click(double_click).perform()
+        #...
+    4.鼠标拖放操作
+    drag_and_drop()(source, target)在源元素上按住鼠标左键,然后移动到目标元素上释放
+        source:鼠标拖动的源元素
+        target:鼠标释放的目标元素
+
+    mouse.py
+        #.....
+        #定位元素的原位置
+        element = driver.find_element_by_id("xx")
+        #定位元素要移动到的目标位置
+        target = driver.find_element_by_id("xx")
+        #执行元素的拖放操作
+        ActionChains(driver).drag_and_drop(element, target).perform()
+        #.....
+4.5键盘事件
+    Keys()类提供了键盘上几乎所有按键的方法.send_keys()方法可以用来模拟键盘输入,除此之外我们还可以用它来输入键盘上的按键,甚至是组合件,如Ctrl+A,Ctrl+C等
+    baidu.py
+        from selenium import webdriver
+        #引入keys模块
+        from selenium.webdriver.common.keys import Keys
+
+        driver = webdriver.Firefox()
+        driver.get("http://www.baidu.com")
+        #输入框输入内容
+        driver.find_element_by_id("kw").send_keys("seleniumm")
+        #删除多输入的一个m
+        driver.find_element_by_id("kw").send_keys(Keys.BACK_SPACE)
+        #输入空格键+"教程"
+        driver.find_element_by_id("kw").send_keys(Keys.SPACE)
+        driver.find_element_by_id("kw").send_keys("教程")
+        #ctrl+a全选输入框内容
+        driver.find_element_by_id("kw").send_keys(Keys.CONTROL, 'a')
+        #ctrl+x剪切输入框内容
+        driver.find_element_by_id("kw").send_keys(Keys.CONTROL, 'x')
+        #ctrl+v粘贴内容到输入框
+        driver.find_element_by_id("kw").send_keys(Keys.CONTROL, 'v')
+        #通过回车键来代替单击操作
+        driver.find_element_by_id("kw").send_keys(Keys.ENTER)
+        driver.quit()
+    from selenium.webdriver.common.keys import Keys
+    在使用键盘按键方法前需要先导入keys类
+    以下为常用的键盘操作
+    send_keys(Keys.BACK_SPACE)          删除键(BackSpace)
+    send_keys(Keys.SPACE)               空格键(Space)
+    send_Keys(Keys.TAB)                 制表键(Tab)
+    send_keys(Keys.ESCAPE)              回退键(Esc)
+    send_keys(Keys.ENTER)               回车键(Enter)
+    send_keys(Keys.CONTROL, 'a')        全选(Ctrl+A)
+    send_keys(Keys.CONTROL,'c')         复制(Ctrl+C)
+    send_keys(Keys.CONTROL,'x')         剪切(Ctrl+X)
+    send_keys(Keys.CONTROL,'v')         粘贴(Ctrl+V)
+    send_keys(Keys.F1)                  键盘F1
+    ....
+    send_keys(Keys.F12)                 键盘F12
+4.6 获得验证信息
+    在偏斜功能测试用例时,会假定一个预期结果,在执行用例的过程中把得到的实际结果与预期结果进行比较,从而判断用户的通过或失败
+    在自动化用例执行完成之后,我们可以从页面上获取一些信息来"证明"用例执行是成功还是失败的
+    通常用的最多的几种验证信息分别是title,URL和text.text方法在前面已经讲过,它用于获取标签对之间的文本信息
+    login126.py
+    from selenium import webdriver
+    import time
+
+    driver = webdriver.Firefox()
+    driver.get("http://www.126.com")
+
+    print('Before login==========')
+    #打印当前页面的title
+    title = driver.title
+    print(title)
+    #打印当前页面的URL
+    now_url = driver.current_url
+    print(now_url)
+    #执行邮箱登录
+    driver.find_element_by_id("idInput").clear()
+    driver.find_element_by_id("idInput").send_keys("username")
+    driver.find_element_by_id("pwdInput").clear()
+    driver.find_element_by_id("pwdInput").send_keys("password")
+    driver.find_element_by_id("loginBtn").click()
+    time.sleep(5)
+
+    print('After login========')
+    #再次打印当前页面title
+    title = driver.title
+    print(title)
+    #打印当前页面URL
+    now_url = driver.current_url
+    print(now_url)
+    #获得登录的用户名
+    user = driver.find_element_by_id('spnUid').text
+    print(user)
+
+    driver.quit()
+
+    title:用户获得当前页面的标题
+    current_url:用于获得当前页面的URL
+    通过打印结果,我们发现登录前后的title和URL明显不同.我们可以把登录之后的这些信息存放起来,作为登录是否成功的验证信息.当然这里URL每次登录都会有所变化,是不能拿来做验证信息的.title可以拿来做验证信息,但它并不能明确地表示是哪个用户登录成功了,因此通过text获取用户文本(username@126.com)是很好的验证信息
+4.7 设置元素等待
+    如今大多数Web应用程序使用AJAX技术.当浏览器加载页面时,页面上的元素可能并不是同时被加载完成的,这给元素的定位增加了困难.如果因为在加载某个元素时延迟而造成ElementNotVisibleException的情况出现,那么就会降低自动化脚本的稳定性,我们可以通过设置元素等待改善这种问题造成的不稳定
+    WebDriver提供了两种类型的等待:显示等待和隐式等待
+4.7.1 显式等待
+    显式等待使WebDriver等待某个条件成立时继续执行,否则在达到最大时长时抛出超时异常(TimeoutException)
+        baidu.py
+            from selenium import webdriver
+            from selenium.webdriver.common.by import By
+            from selenium.webdriver.support.ui import WebDriverWait
+            from selenium.webdriver.support import expected_conditions as EC
+
+            driver = webdriver.Firefox()
+            driver.get("http://www.baidu.com")
+
+            element = WebDriverWait(driver, 5, 0.5).until(
+                                EC.presence_of_element_located((By.ID, "kw"))
+                                )
+            element.send_keys('selenium')
+            driver.quit()
+    WebDriverWait类是由WebDriver提供的等待方法.在设置时间内,默认每隔一段时间检测一次当前页面元素是否存在,如果超过设置时间检测不到则抛出异常.具体格式如下:
+        WebDriverWait(driver, timeout, poll_frequency=0.5, ignored_exception=None)
+        driver:浏览器驱动
+        timeout:最长超时时间,默认以秒为单位
+        poll_frequency:检测的间隔(步长)时间,默认为0.5s
+        ignored_exceptions:超时后的异常信息,默认情况下抛NoSuchElementException异常
+        WebDriverWait()一般由until()或until_not()方法配合使用,下面是until()和until_not()方法的说明
+            until(method,message='')
+            调用该方法提供的驱动程序作为一个参数,直到返回值为True
+            until_not(method, message='')
+            调用该方法提供的驱动程序作为一个参数,直到返回值为False
+            在本例中,通过as关键字将expected_conditions重命名为EC,并调用presence_of_element_located()方法判断元素是否存在
+            expected_conditions类所提供的预期条件判断的方法如表:
+            方法                                  说明
+            title_is                              判断当前页面的标题是否等于预期
+            title_contains                          判断当前页面的标题是否包含预期字符串
+            presence_of_element_located             判断元素是否被加在DOM树里,并不代表该元素一定可见
+            visibility_of_element_located           判断元素是否可见(可见代表元素非隐藏,并且元素的宽和高都不等于0)
+            visibility_of                           与上一个方法作用相同,只是上一个方法参数为定位,该方法接受的参数为定位后的元素
+            presence_of_all_elements_located        判断是否至少有一个元素存在与DOM树中.例如,在页面中有n个元素的class为"wp",那么只要有一个存在就返回True
+            text_to_be_present_in_element           判断某个元素的text中是否包含了预期字符串
+            text_to_be_present_in_element_value     判断某个元素的value属性是否包含了预期字符串
+            frame_to_be_available_and_switch_to_it  判断该表单是否可以切换进去,如果可以,返回True并且switch进去,否则返回False
+            invisibility_of_element_located         判断某个元素是否不存在于DOM树或不可见
+            element_to_be_clickable                 判断元素是否可见并且是可以点击的
+            statness_of                             等到一个元素从DOM树中移除
+            element_to_be_selected                  判断某个元素是否被选中,一般用在下拉列表
+            element_selection_state_to_be           判断某个元素的选中状态是否符合预期
+            element_located_selection_state_to_be   与上一个方法作用相同,只是上一个方法参数为定位后的元素,该方法接收的参数为定位
+            alert_is_present                        判断页面上是否存在alert
+            除expected_conditions所提供的丰富的预期条件判断方法外,还可以使用is_displayed()方法来判断元素是否可见
+            baidu.py
+                from selenium import webdriver
+                from time import sleep, ctime
+                driver = webdriver.Firefox()
+                driver.get("http://www.baidu.com")
+                print(ctime())
+                for i in range(10):
+                    try:
+                        el = driver.find_element_by_id("kw22")
+                        if el.id_displayed():
+                            break
+                        except: pass
+                        sleep(1)
+                    else:
+                        print("time out")
+                    driver.close()
+                    print(ctime())
+            相对来说,这种方式更容易理解,通过for循环10次,每次循环判断元素的is_displayed()状态是否为True:如果为True,则break跳出循环;否则sleep(1)后继续循环判断,直到10次循环结束后,打印"time out"信息
+4.7.2 隐式等待
+	隐式等待是通过一定的时长等待页面上的某元素加载完成.如果超出了设置的时长元素没有被加载,则抛出NoSuchElementException异常.WebDriver提供了implicitly_wait()方法来实现隐式等待,默认设置为0.它的用法相对来说要简单的多
+	baidu.py
+		from selenium import webdriver
+		from selenium.common.exceptions import NoSuchElementException
+		from time import ctime
+
+		driver = webdriver.Firefox()
+		#设置隐式等待为10秒
+		driver.implicitly_wait(10)
+		driver.get("http://www.baidu.com")
+		try:
+			print(ctime())
+			driver.find_element_by_id("kw22").send_keys('selenium')
+		except NoSuchElementException as e:
+			print(e)
+		finally:
+			print(ctime())
+			driver.quit()
+	implicitly_wait()默认参数的单位为秒,本例中设置等待时长为10秒.首先这10秒并非一个固定的等待时间,它并不影响脚本的执行速度.其次,它并不针对页面上的某一元素进行等待.当脚本执行到某个元素定位时,如果元素可以定位,则继续进行;如果元素定位不到,则它将以轮询的方式不断地判断元素是否被定位到.假设在第六秒定位到了元素则继续执行,若知道超出设置时长10秒还没有定位到元素,则抛出异常
+4.7.3 sleep休眠方法
+	有时候希望脚本执行到某一位置时做固定时间的休眠,尤其是在脚本调试过程中,这时可以使用sleep()方法,需要说明的是,sleep()方法由Python的time模块提供
+	baidu.py
+		from selenium import webdriver
+		from time import sleep
+		driver = webdriver.Firefox()
+		driver.get("http://www.baidu.com")
+		sleep(2)
+		driver.find_element_by_id("kw").send_keys("webdriver")
+		driver.find_element_by_id("su").click()
+		sleep(3)
+		driver.quit()
+	当执行到sleep()方法时会固定休眠一定的时长,然后再继续执行.sleep()方法默认参数以秒为单位,如果设置时长小于1秒,则可以用小数表示
+4.8 定位一组元素
+	WebDriver提供了与定位元素对应的定位一组元素的方法
+	find_elements_by_id()
+	find_elements_by_name()
+	find_elements_by_class_name()
+	find_elements_by_tag_name()
+	find_elements_by_link_text()
+	find_elements_by_partial_link_text()
+	find_elements_by_xpath()
+	find_elements_by_css_selector()
+	定位一组元素一般用于以下场景
+		批量操作元素,例如勾选页面上所有的复选框
+		先获取一组元素,再从这组对象中过滤出需要操作的元素.例如定位出页面上所有的checkbox,然后选择其中的一个进行操作
+		checkbox.py
+		from selenium import webdriver
+		import os, time
+		driver = webdriver.Firefox()
+		file_path = 'file:///' + os.path.abspath('checkbox.html')
+		driver.get(file_path)
+		#选择页面上所有的tag name为input的元素
+		inputs = driver.find_elements_by_tag_name("input")
+		#然后过滤出type为checkbox的元素,单击勾选
+		for i in inputs:
+			if i.get_attribute('type') == 'checkbox':
+				i.click()
+				time.sleep(1)
+		driver.quit()
+	需要注意的是,在上面的例子中,通过浏览器打开的是一个本地的html文件,所以需要用到Python的os模块,path.abspath()方法用于获取当前路径下的文件
+	除此之外,我们还可以使用XPath或CSS来直接判断属性值,从而进行单击操作
+		checkbox.py
+		from selenium import webdriver
+		import os, time
+		driver = webdriver.Firefox()
+		file_path = 'file:///' + os.path.abspath('checkbox.html')
+		driver.get(file_path)
+		#通过XPath找到type=checkbox的元素
+		#checkboxes = driver.find_elements_by_xpath("//input[@type='checkbox]")
+		#通过CSS找到type=checkbox的元素
+		checkboxes = driver.find_elements_by_css_selector('input[type=checkbox]')
+		for checkbox in checkboxes:
+			checkbox.click()
+			time.sleep()
+		#打印当前页面上type为checkbox的个数
+		print(len(checkboxes))
+		#把页面上最后1个checkbox的钩给去掉
+		driver.find_elements_by_css_selector('input[type=checkbox]').pop().click()
+
+		driver.quit()
+	通过XPath或CSS来查找一组元素时,省去了判断步骤.因为定位方法已经做了判断,只需循环对这一组元素进行勾选即可.
+	除此之外,例子中还用到了Python所提供的两个有趣的方法.len()方法可以用来计算元素的个数,通过print()打印出计算结果.pop()方法用于获取列表中的一个元素(默认为最后一个元素),并且返回该元素的值.因为前面的循环已经将所有复选框都勾选上了,再对这一组元素执行pop().click(),其实是对后一个元素取消勾选.
+	如果想勾选一组元素中的某一个
+	pop()或pop(-1) 默认获取一组元素中的最后一个
+	pop(0) 默认获取一组元素中的第一个
+	pop(1) 默认获取一组元素中的第二个
+	....
+4.9 多表单切换
+	在Web应用中经常会遇到frame/iframe表单嵌套页面的应用,WebDriver只能在一个页面上对元素识别与定位,对于frame/iframe表单内嵌页面上的元素无法直接定位.这时就需要通过switch_to.frame()方法将当前定位的主体切换为frame/iframe表单的内嵌页面中
+	frame.html
+	<html>
+	<head>
+	<link href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" />
+			<script type="text/javascript">$(document).ready(function(){
+					});
+			</script>
+	</head>
+	<body>
+	<div class="row-fluid">
+		<div class="span10 well">
+			<h3>frame</h3>
+				<iframe id="if" name="nf" src="http://www.baidu.com" width="800" height="300">
+			</iframe>
+		</div>
+	</div>
+	</body>
+	<script
+	src="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.js"></script>
+	</html>
+	这时候直接定位页面上的百度的输入框一定会报错:找不到元素.因此可以使用switch_to.frame()先找到frame.html中的<iframe>标签,然后再定位百度输入框
+	frame.py
+	from selenium import webdriver
+	import time
+	import os
+
+	driver = webdriver.Firefox()
+	file_path = 'file:///' + os.path.abspath('frame.html')
+	driver.get(file_path)
+	#切换到iframe(id="if")
+	driver.switch_to.frame("if")
+	#下面就可以正常操作元素了
+	driver.find_element_by_id("kw").send_keys("selenium")
+	driver.find_element_by_id("su").click()
+	time.sleep(3)
+	driver.quit()
+	switch_to.frame()默认可以直接取表单的id或name属性.如果iframe没有可用的id和name属性,则可以通过下面的方式进行定位
+	frame.py
+	....
+	#先通过xpath定位到iframe
+	xf = driver.find_element_by_xpath('//*[@class="if"]')
+	#再将定位对象传给switch_to.frame()方法
+	driver.switch_to.frame(xf)
+	...
+	driver.switch_to.parent_frame()
+	如果完成了当前表单上的操作,则可以通过switch_to.parent_content()方法跳出当前一级表单.该方法默认对应于离他最近的switch_to.frame()方法.除此之外,在进入多级表单的情况下,还可以通过switch_to.default_content()跳回最外层的页面
+4.10 多窗口切换
+	在页面操作过程中有时候点击某个连接换弹出新的窗口,这时就需要主机切换到新开的窗口上进行操作.WebDriver提供了switch_to.window()方法,可以实现在不同的窗口之间切换
+	以百度首页和百度注册页为例,在两个窗口之间的切换
+	windows.py
+	from selenium import webdriver
+	import time
+
+	driver = webdriver.Firefox()
+	driver.implicitly_wait(10)
+	driver.get("http://www.baidu.com")
+	#获得百度搜索窗口句柄
+	search_windows = driver.current_window_handle
+	driver.find_element_by_link_text('登录').click()
+	driver.find_element_by_link_text('立即注册').click()
+
+	#获得当前所有打开的窗口的句柄
+	all_handles = driver.window_handles
+	#进入注册窗口
+	for handle in all_handles:
+		if handle != search_windows:
+			driver.switch_to.window(handle) 
+			print('now register window!')
+			driver.find_element_by_name("account").send_keys('username')
+			driver.find_element_by_name('password').send_keys('password')
+			time.sleep(2)
+			#...
+	#回到搜索窗口
+	for handle in all_handles:
+		if handle == search_windows:
+			driver.switch_to.window(handle)
+			print('now search window!')
+			driver.find_element_by_id("TANGRAM__PSP_2__closeBtn").click()
+			driver.find_element_by_id("kw").send_keys("selenium")
+			driver.find_element_by_id("su").click()
+			time.sleep(2)
+	driver.quit()
+	脚本执行的过程:首先打开百度首页,通过current_window_handle获得当前窗口的句柄,并赋值给search_windows.接着打开登录弹窗,在登录弹窗上单击"立即注册",从而打开新的注册窗口.通过windows_handles获得当前打开的所有窗口的句柄,并赋值给all_handles
+	第一个循环变量all_handles,如果handle不等于search_handle,那么一定是注册窗口,因为脚本执行的过程中只打开了两个窗口.所以,通过switch_to.window()切换到注册页进行注册操作.第二个循环类似,不过这一次判断如果handle等于search_windows,那么切换到百度搜索页,然后进行搜索操作
+	涉及的新方法:
+	    current_window_handle:获得当前窗口句柄
+	    windows_handles:返回所有窗口的句柄到当前会话
+	    switch_to.window():用户切换到相应的窗口,与switch_to.frame()类似,前者用于不同窗口的切换,后者用于不同表单之间的切换
+4.11 警告框处理
+    在WebDriver中处理JavaScript所生成的alert,confirm以及prompt十分简单,具体做法是使用switch_to.alert()方法定位到alert/confirm/prompt,然后使用text/accept/dismiss/send_keys等方法进行操作
+        text:返回alert/confirm/prompt中的文字信息
+        accept():接受现有警告框
+        dismiss():解散现有警告框
+        send_keys(keysToSend):发送文本至警告框.keysToSend:将文本发送至警告框
+        通过switch_to.alert()方法接受百度弹窗
+        alert_.py
+        from selenium import webdriver
+        from selenium.webdriver.common.action_chains import ActionChains
+        import time
+
+        driver = webdriver.Firefox()
+        driver.implicitly_wait(10)
+        driver.get("http://www.baidu.com")
+        #鼠标悬停值"设置按钮"链接
+        link = driver.find_element_by_text_link("设置")
+        ActionChains(driver).move_to_element(link).perform()
+        #打开搜索设置
+        driver.find_element_by_link_text("搜索设置").click()
+        #保存设置
+        driver.find_element_by_class_name("prefpanelgo").click()
+        time.sleep(2)
+
+        #接受警告框
+        driver.switch_to.alert.accept()
+
+        driver.quit()
+    ActionChains类提供了move_to_element()鼠标悬停方法
+    通过switch_to.alert.accept()获取当前页面上的警告框,并使用accept()方法接受警告框
+4.12 上传文件
+    WebDriver没有提供专门用于上传的方法
+    一般上传功能:单击"上传"按钮后打开本地的Window窗口,从窗口中选择本地文件上传.而WebDriver无法操作Windows控件
+    对于Web页面的上传功能的实现一般有以下两种方式
+        普通上传:普通的附件上传是将本地文件的路径作为一个值放在input标签中,通过form表单将这个值提交给服务器
+        插件上传:一般是指基于Flash,JavaScript或Ajax等技术所实现的上传功能
+4.12.1 send_keys实现上传
+    看作输入框,通过send_keys()指定本地文件路径的方式实现文件上传
+    upfile.html
+    ...
+    upfile.py
+    from selenium import webdriver
+    import os
+
+    driver = webdriver.Firefox()
+    file_path = 'file:///' + os.path.abspath('upload_file.html')
+    driver.get(file_path)
+    #定位上传按钮,添加本地文件
+    driver.find_element_by_name("file").send_keys('D:\\upload_file.txt')
+
+    driver.quit()
+    避免了操作Windows控件的步骤.如果能找到上传的input标签,那么基本就可以通过send_keys()方法向其输入一个文件地址来实现上传
+4.12.2 AutoIt实现上传
+    类似BASIC脚本语言的免费软件,被设计用于Windows GUI(图形用户界面)的自动化测试.它利用模拟键盘按键,鼠标移动和窗口/空间的组合来实现自动化任务
+    官方网站:https://www.autoitscript.com/site/
+    操作upload_file.html上传弹出的窗口为例,AutoIt上传过程
+        1.打开AutoIt Windows Info工具,用鼠标单击Finder Tool,将其拖动到需要识别的控件上
+        获得如下信息:
+        窗口的title为"选择要加载的文件",标题的Class为"#32770"
+        文件名输入框的class为"Edit",Instance为"1",所以ClassnameNN为"Edit1"
+        打开按钮的class为"Button",Instance为"1",所以ClassnameNN为"Button1"
+        2.根据AutoIt Windows Info所识别到的空间信息,打开SciTE Script Editor编辑器,编写AutoIt脚本
+        upfile.au3
+        ;ControlFocus("title","text",controlID) Edit1=Edit instance 1
+        ControlFocus("选择要加载的文件", "", "Edit1")
+        ; Wait 10 seconds for the Upload window to appear
+          WinWait("[CLASS:#32770]", "", 10)
+        ; Set the File name text on the Edit field
+          ControlSetText("选择要加载的文件", "", "Edit1", "D:\\upload_file.txt")
+          Sleep(2000)
+        ; Click on the Open button
+          ControlClick("选择要加载的文件", "", "Button1");
+            ControlFocus()方法用于识别Window窗口.WinWait()方法设置10秒钟用于等待窗口的显示.ControlSetText()方法用于向"文件名"输入框内输入本地上传文件的路径.这里的Sleep()方法与Python中time模块提供的Sleep()方法用法一样,不过它是以毫秒为单位,Sleep(2000)表示固定休眠2000毫秒.ControlClick()用于单击上传窗口中的"打开"按钮
+            AutoIt脚本写好后,通过菜单栏"Tools"->"Go"或(F5)来运行脚本
+            注意:在运行时文件上传窗口应处于打开状态
+        3.脚本运行正常,将其保存为upfile.au3文件.这里保存的脚本可以通过Run Script工具将其打开运行,但如果要被python调用,那么就需要将其生成为exe程序.打开Compile Script to.ext工具,将其生成exe可执行文件,单击"Browse"按钮,选择upfile.au3文件,单击"Convert"按钮将其生成为upfile.exe程序
+        4.通过自动化测试脚本调用upfile.exe程序,实现上传
+        upfile.py
+        from selenium import webdriver
+        import os
+
+        driver = webdriver.Firefox()
+        #打开上传功能页面
+        file_path = 'file:///' + os.path.abspath('upfile.html')
+        driver.get(file_path)
+        #单击打开上传窗口
+        driver.find_element_by_name("file").click()
+        #调用upfile.exe上传程序
+        os.system("D:\\upfile.exe")
+
+        driver.quit()
+        通过system()方法可以调用并执行upfile.exe程序
+        虽然这种方式可以解决文件上传(或下载)的操作问题,但是python调用的exe程序并不在python的可控范围内.exe执行多长时间,执行是否出错,python程序都无法得知
+4.13 下载文件
+    WebDriver允许我们设置默认的文件下载路径,也就是说,文件会自动下载并且存放到设置的目录
+    downfle.py
+    from selenium import webdriver
+    import os
+
+    fp = webdriver.FirefoxProfile()
+    fp.set_preference("browser.download.folderList",2)
+    fp.set_preference("browser.download.manager.showWhenStarting", False)
+    fp.set_preference("browser.download.dir", os.getcwd())
+    fp.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/octet-stream")
+    #下载文件的类型
+    driver = webdriver.Firefox(firefox_profile = fp)
+    driver.get("http://pypi.Python.org/pypi/selenium")
+    driver.find_element_by_partial_link_text("selenium-2").click()
+    为了让Firefox浏览器实现下载文件,需要通过FirefoxProfile()对其做一些设置
+    browser.download.folderList
+    设置成0代表下载到浏览器默认下载路径,设置成2则可以保存到指定目录
+    browser.download.manager.showWhenStarting
+    是否显示开始:True为显示,False为不显示
+    browser.download.dir
+    用于指定下载文件的目录.os.getcwd()函数不需要传递参数,用于返回当前的目录
+    browser.helperApps.neverAsk.saveToDisk
+    指定要下载的页面的Content-type值,"application/octet-stream"为文件的类型
+    HTTP Content-type常用对照表:http://tool.oschina.net/commons
+    这些参数的设置可以通过在Firefox浏览器地址栏输入:about:config进行设置
+    将所有设置信息在调用WebDriver的Firefox()方法时作为参数传递给浏览器.Firefox浏览器在下载时就根据这些设置信息将文件下载到当前脚本的目录下
+    上面的例子中的设置只针对Firefox浏览器,不同的浏览器设置方法会有所不同.通用的方法还是借助AutoIt来操作windows控件进行下载
+4.14 操作Cookie
+    有时候我们需要验证浏览器中的cookie是否正确,因为基于真实的cookie的测试是无法通过百合和集成测试的.WebDriver提供了操作Cookie的相关方法,可以读取,添加和删除cookie信息
+    WebDriver操作cookie的方法
+        get_cookies():              获得所有cookie信息
+        get_cookie(name):           返回字典的key为"name"的cookie信息
+        add_cookie(cookie_dict):    添加cookie."cookie_dict"指字典对象,必须有name和value值
+        delete_cookie(name,optionsString):      删除cookie信息."name"是要删除的cookie的名称,"optionString"是该cookie的选项,目前支持的选项包括"路径","域"
+        delete_all_cookies():       删除所有cookie信息
+        下面通过get_cookies()来获取当前浏览器的cookie信息
+        cookie.py
+        from selenium import webdriver
+        driver = webdriver.Firefox()
+        driver.get("http://www.baidu.com")
+        #获得cookie信息
+        cookie = driver.get_cookies()
+        #将获得的cookie的信息打印
+        print(cookie)
+        driver.quit()
+    cookie数据是以字典的形式进行存放的
+    按照这种形式向浏览器写入cookie信息
+    cookie.py
+    from selenium import webdriver
+
+    driver = webdriver.Firefox()
+    driver.get("http://www.youdao.com")
+    #向cookie的name和value中添加会话信息
+    driver.add_cookie({'name': 'key-aaaaaaa', 'value': 'value-bbbbbb'})
+    #遍历cookies中的name和value信息并打印,当然还有上面添加的信息
+    for cookie in driver.get_cookies():
+        print("%s -> %s" % (cookie['name'], cookie['value']))
+    driver.quit()
+    从执行结果可以看到,最后一条cookie信息是脚本执行过程中通过add_cookie()方法添加的.通过遍历得到所有的cookie信息,从而找到key为'name'和'value'的特定cookie的value
+    用到cookie操作的情况,功能:用户登录后,会将用户的用户名写入浏览器cookie,指定的key为'username',
+    可以通过get_cookies()找到username,打印value.如果找不到username或对应的value为空,那么说明cookie没有成功地保存到浏览器中
+    delete_cookie()和delete_all_cookie()的使用也很简单,前者通过name删除一个特定的cookie信息,后者直接删除浏览器中的所有cookies信息
+4.15 调用JavaScript
+    虽然WebDriver提供了操作浏览器前进和后退方法,但对于浏览器滚动条并没有提供相应的操作方法.
+    可以借助JavaScript来控制浏览器的滚动条
+    WebDriver提供了execute_script()方法来执行JavaScript代码
+    场景:注册时法律条文的阅读.判断用户是否阅读完的标准是:滚动条是否拉到页面底部.当然,有时候为了使操作更接近用户行为也会使用滚动条,例如用户要操作的元素在页面的第二屏,一般用户不会对看不到的元素进行操作,那么就需要现将滚动条拖动到页面的第二屏再进行操作
+    用于调整浏览器滚动条位置的JavaScript代码如下:
+    html
+    .....
+    <!-- window.scrollTo(左边距,上边距); -->
+    window.scrollTo(0, 450);
+    ......
+    window.scrollTop()方法用于设置浏览器窗口滚动条的水平和垂直位置.方法的第一个参数表示水平的左边距,第二个参数表示垂直的上边距
+    baidu.py
+    from selenium import webdriver
+    from time import sleep
+    #访问百度
+    driver = webdriver.Firefox()
+    driver.get("http://www.baidu.com")
+    #设置浏览器窗口大小
+    driver.set_window_size(600, 600)
+    #搜索
+    driver.find_element_by_id("kw").send_keys("selenium")
+    driver.find_element_by_id("su").click()
+    sleep(2)
+    #通过javascrip设置浏览器窗口的滚动条位置
+    js = "window.scrollTo(100, 450);"
+    driver.execute_script(js)
+    sleep(3)
+
+    driver.quit()
+    通过浏览器打开百度进行搜索,并且提前通过set_window_size()方法将浏览器窗口设置为固定宽高显示,然后通过execute_script()方法执行javascript代码来移动滚动条的位置,
+    JavaScript的作用除了体现在浏览器滚动条的操作上,还可以用它向页面中textarea文本框输入内容
+    文本框前端代码:
+    html
+    ...
+    <textarea id="id" style="width: 98%" cols="50" rows="5" class="txtarea">
+    </textarea>
+    ...
+    虽然我们可以通过id的方式将其进行定位,但是不能通过send_keys()向文本框中输入文本信息.这种情况下,就需要借助JavaScript代码完成输入
+    js_test.py
+    ....
+    text = "input text"
+    js = "var sum=document.getElementById('id'); sum.value='" + text + "';"
+    driver.execute_script(js)
+    ...
+    首先定义了要输入的内容text,然后将text与JavaScript代码通过"+"进行拼接.目的是为了输入内容变得可自定义.最后,通过execute_script()执行JavaScript代码
+4.16 处理HTML5的视频播放
+    HTML5,主流的浏览器都已支持HTML5.越来越多的应用使用了HTML5的元素,如canvas,video等,另外网页存储功能更增加了用户的网络体验
+    WebDriver支持在指定的浏览器上测试HTML5,另外,我们还可以使用JavaScript来测试这些功能,这样就可以在任何浏览器上测试HTML5
+    大多数浏览器使用控件(如Flash)来播放视频,但是,不同的浏览器需要使用不同的插件.HTML5定义了一个新的元素<video>,指定了一个标准的方式来嵌入电影片段,IE9,Firefox,Opera,Chorme都支持该元素
+    自动化测试<video>,该元素提供了JavaScript接口和多种方法及属性
+    test_video.py
+    from selenium import webdriver
+    from time import sleep
+
+    driver = webdriver.Firefox()
+    driver.get("http://videojs.com/")
+
+    video = driver.find_element_by_xpath("body/Setion[1]/div/video")
+    #返回播放文件地址
+    url = driver.execute_script("return arguments[0].currentSrc;", video)
+    print(url)
+    #播放视频
+    print("start")
+    driver.execute_script("return arguments[0].play()", video)
+    #播放15秒钟
+    sleep(15)
+    #暂停视频
+    print("stop")
+    driver.execute_script("arguments[0].pause()", video)
+
+    driver.quit()
+    JavaScript函数有个内置的对象叫做arguments.arguments对象包含了函数调用的参数数组,[0]表示取对象的第一个值
+    currentSrc返回单签音频/视频的URL.如果未设置音频/视频,则返回空字符串
+    load(),play(),pause()等控制着视频的加载,播放和暂停
+4.17 窗口截图
+    通过图片直观看出出错的原因
+    WebDriver提供了截图函数get_screenshot_as_file()来截取当前窗口
+    baidu.py
+    from selenium import webdriver
+    from time import sleep
+
+    driver = webdriver.Firefox()
+    driver.get("http://www.baidu.com")
+
+    driver.find_element_by_id('kw').send_keys('selenium')
+    driver.find_element_by_id('su').click()
+    sleep(2)
+    #截取当前窗口,并指定截图图片的保存位置
+    driver.get_screenshot_as_file("D:\\baidu_img.jpg")
+
+    driver.quit()
+    注意:保存为.jpg格式会warning,建议保存为.png文件
+4.18 关闭窗口
+    quit():退出相关的驱动程序和关闭所有窗口
+    close():关闭当前窗口,打开了多个窗口关闭其中一个使用close()
+4.19 验证码的处理
+    对于系统,使用验证码可以有效地防止采用机器猜测方法对口令的刺探,在一定程度上增加了安全性
+    WebDriver没有提供相应的方法来处理验证码,常见方法:
+    1.去掉验证码
+    2.设置万能验证码
+    3.验证码识别技术
+    可以通过Python-tesseract来识别图片验证码.Python-tesseract是光学字符识别Tesseract OCR引擎的Python封装类,能够读取任何常规的图片文件(JPG,GIF,PNG,TIFF等)
+    4.记录cookie
+    通过向浏览器添加cookie可以绕过登录的验证码
+    例如:"记住密码",再访问该网站时自动处于登录状态.这样自然就绕过了验证码问题
+    这个"记住密码"功能其实就是记录在浏览器的cookie中,通过add_cookie()方法将用户名密码写入浏览器cookie,当再次访问网站时,服务器将直接读取浏览器的cookie进行登录
+    这种方式最大的问题是如何从浏览器的cookie中找到用户名和密码对应的key值,并穿输入对应的登录信息.可以用get_cookies()方法来获取登录的所有cookie信息,也可以直接询问开发
+4.20 WebDriver 原理
+    WebDriver是按照Server-Client的经典设计模式设计的
+    Server就是Remote Server,可以是任意的浏览器.当我们的脚本启动浏览器后,该浏览器就是Remote Server,它的职责就是等待Client发送请求并作出响应
+    Client端简单说来就是我们的测试代码.我们测试代码中的一些行为,例如打开浏览器,跳转到特定的URL等操作是以http请求的方式发送给被测浏览器的,也就是说Remote Server.Remote Server接受请求,执行相应操作,并在Response中返回执行状态,返回值等信息
+    WebDriver的工作流程:
+        1)WebDriver启动目标浏览器,并绑定到指定端口.启动的浏览器实例将作为WebDriver的Remote Server
+        2)Client端通过CommandExcuter发送HTTPRequest给RemoteServer的侦听端口(通信协议:the webdriver wire protocol)
+        3)Remote Server需要依赖原生的浏览器组件(如IEDriverServer.exe,chromedriver.exe)来转化浏览器的native调用
+        python提供了logging模块给运行中的应用提供了一个标准的信息输出接口.它提供了basicConfig()方法用于基本信息的定义.开启debug模块,就可以捕捉到客户端向服务器发送的请求了
+        baidu.py
+        from selenium import webdriver
+        import logging
+
+        logging.basicConfig(level=logging.DEBUG)
+        driver = webdriver.Firefox()
+        driver.get("http://www.baidu.com")
+
+        driver.find_element_by_id("kw").send_keys("selenium")
+        driver.find_element_by_id("su").click()
+        driver.quit()
+本章总结:
+    1.熟练掌握XPath/CSS定位的使用
+    2.WebDriver API文档
+    3.学习JavaScript,jQuery
+
